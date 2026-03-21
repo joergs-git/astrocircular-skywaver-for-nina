@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SKW Collimation Coordinator v5 for N.I.N.A.</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0c0e14;
+    --surface: #12151d;
+    --surface2: #181c28;
+    --surface3: #1f2435;
+    --border: #272d42;
+    --text: #dfe3f0;
+    --text-dim: #7a839e;
+    --accent: #5b8def;
+    --accent2: #4a7ddf;
+    --accent-glow: rgba(91,141,239,0.12);
+    --success: #4ade80;
+    --warn: #f59e0b;
+    --error: #ef4444;
+    --step-done: #4ade80;
+    --step-active: #5b8def;
+    --step-pending: #3a4060;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html, body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* ── LAYOUT: header + body, NO scroll on 1280×1024 ── */
+  .shell {
+    display: grid;
+    grid-template-rows: 40px 1fr;
+    height: 100vh;
+  }
+
+  .header {
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+  }
+  .header h1 { font-size: 0.95rem; font-weight: 600; letter-spacing: -0.02em; }
+  .header .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    background: var(--accent-glow);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(91,141,239,0.25);
+  }
+  .header .calc-btn, .calc-btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 7px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: #22a558;
+    color: #fff;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .calc-btn:hover { background: #1d9a4e; }
+  .calc-btn:active { transform: scale(0.97); }
+
+  .body {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    overflow: hidden;
+  }
+
+  /* ── LEFT: Accordion Steps ── */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .step {
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .step.expanded .step-body { display: block; }
+  .step:not(.expanded) .step-body { display: none; }
+
+  .step-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s;
+  }
+  .step-head:hover { background: var(--surface2); }
+
+  .step-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    border: 1.5px solid var(--step-pending);
+    color: var(--step-pending);
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .step.expanded .step-num {
+    border-color: var(--step-active);
+    color: var(--step-active);
+    background: rgba(91,141,239,0.1);
+  }
+  .step.done .step-num {
+    border-color: var(--step-done);
+    color: var(--bg);
+    background: var(--step-done);
+  }
+
+  .step-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    flex: 1;
+  }
+  .step.expanded .step-label { color: var(--text); }
+
+  .step-chevron {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+  .step.expanded .step-chevron { transform: rotate(180deg); }
+
+  .step-body {
+    padding: 4px 14px 10px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  /* ── FIELDS ── */
+  .fg { /* field-grid: 2 fields per row */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 10px;
+  }
+  .fg.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+  .f {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin-bottom: 3px;
+  }
+  .f.span2 { grid-column: span 2; }
+  .f label {
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+  }
+  .f input, .f select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 6px;
+    border-radius: 3px;
+    width: 100%;
+  }
+  .f input:focus, .f select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-glow);
+  }
+  .f input[type="checkbox"] { width: auto; }
+  .f-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .f-row label { font-size: 0.68rem; color: var(--text-dim); }
+  .f-row input[type="checkbox"] { margin: 0; }
+
+  .sbtn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    background: var(--surface2);
+    color: var(--text);
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .sbtn:hover { border-color: var(--accent); background: var(--surface3); }
+
+  .hint {
+    font-size: 0.64rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    padding: 5px 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    margin-top: 4px;
+  }
+  .hint .hl { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+  .hint .good { color: var(--success); }
+
+  /* ── PRESET LIST ── */
+  .presets {
+    max-height: 145px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+  }
+  .preset {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    padding: 3px 6px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    background: var(--surface2);
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.1s;
+  }
+  .preset:hover { border-color: var(--accent); color: var(--text); }
+  .preset .stag {
+    font-size: 0.5rem;
+    padding: 0px 4px;
+    border-radius: 2px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .s-sp { background: #2a4228; color: #7de87d; }
+  .s-su { background: #4a4a28; color: #e8e87d; }
+  .s-fa { background: #4a3828; color: #e8b87d; }
+  .s-wi { background: #28384a; color: #7db8e8; }
+  .preset .pname { flex: 1; }
+  .preset .pmag { color: var(--text-dim); }
+
+  /* ── RIGHT: Tabs + Content ── */
+  .main {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .tab {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.72rem;
+    padding: 7px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.12s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-panel { display: none; flex: 1; overflow: auto; padding: 12px 16px; }
+  .tab-panel.active { display: flex; flex-direction: column; }
+
+  /* ── INFO CARDS ── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 5px;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 6px 8px;
+  }
+  .card .cl { font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); }
+  .card .cv {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+
+  .canvas-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+  canvas { max-width: 100%; max-height: 100%; }
+
+  .flow-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px 10px;
+    font-size: 0.68rem;
+    line-height: 1.6;
+    margin-top: 8px;
+    flex-shrink: 0;
+  }
+  .flow-box .hl { color: var(--accent); font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+
+  /* ── TABLE ── */
+  table.pt {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.68rem;
+  }
+  table.pt th, table.pt td {
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+  table.pt th {
+    background: var(--surface2);
+    font-weight: 500;
+    color: var(--text-dim);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    position: sticky;
+    top: 0;
+  }
+  table.pt td { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; }
+  table.pt tr:nth-child(odd) td { background: var(--surface); }
+  .crow td { color: var(--error); font-weight: 500; }
+
+  /* ── CODE BLOCK + DOWNLOAD BAR ── */
+  .dl-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    flex-shrink: 0;
+  }
+  .dl-bar .sbtn { padding: 5px 14px; }
+  .dl-bar .dl-info { font-size: 0.62rem; color: var(--text-dim); }
+
+  .code {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.63rem;
+    line-height: 1.55;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: var(--text-dim);
+    min-height: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- ════ HEADER ════ -->
+  <div class="header">
+    <h1>SKW Collimation Coordinator</h1>
+    <span class="badge">v5 · @joergsflow</span>
+  </div>
+
+  <div class="body">
+    <!-- ════ LEFT: STEP ACCORDION ════ -->
+    <div class="sidebar" id="sidebar">
+
+      <!-- STEP 1: Setup -->
+      <div class="step expanded" data-step="1">
+        <div class="step-head" onclick="toggleStep(1)">
+          <span class="step-num">1</span>
+          <span class="step-label">Setup — Location & Telescope</span>
+          <span class="step-chevron">▾</span>
+        </div>
+        <div class="step-body">
+          <div class="fg">
+            <div class="f"><label>Latitude °N</label><input type="number" id="obsLat" value="52.17" step="0.01"></div>
+            <div class="f"><label>Longitude °E</label><input type="number" id="obsLon" value="7.25" step="0.01"></div>
+            <div class="f"><label>Focal Length mm</label><input type="number" id="focalLengthMm" value="1946" step="1"></div>
+            <div class="f"><label>Aperture mm</label><input type="number" id="apertureMm" value="304.8" step="0.1"></div>
+            <div class="f"><label>Sensor W mm</label><input type="number" id="sensorWidthMm" value="36.0" step="0.1"></div>
+            <div class="f"><label>Sensor H mm</label><input type="number" id="sensorHeightMm" value="24.0" step="0.1"></div>
+            <div class="f"><label>Pixel Size µm</label><input type="number" id="pixelSize" value="3.76" step="0.01"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Target -->
+      <div class="step" data-step="2">
+        <div class="step-head" onclick="toggleStep(2)">
+          <span class="step-num">2</span>
+          <span class="step-label">Target — Star Selection</span>
+          <span class="step-chevron">▾</span>
+        </div>
+        <div class="step-body">
+          <div style="display:flex;gap:4px;margin-bottom:6px;align-items:stretch;">
+            <select id="starTime" class="sbtn" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:0.65rem;padding:4px 6px;">
+              <option value="now">Now</option>
+              <option value="dusk">Dusk today</option>
+              <option value="21">21:00</option>
+              <option value="23" selected>23:00</option>
+              <option value="1">01:00</option>
+              <option value="3">03:00</option>
+              <option value="5">05:00</option>
+            </select>
+            <button class="sbtn" onclick="calcBestStar()" style="white-space:nowrap;">🎯 Find Best Star</button>
+          </div>
+          <div id="zenithResult" class="hint" style="display:none;"></div>
+          <div id="magAdvice" class="hint" style="display:none; margin-top:4px;"></div>
+          <div class="presets" id="presetGrid"></div>
+          <div class="fg" style="margin-top:6px;">
+            <div class="f"><label>RA (H:M:S)</label><input type="text" id="raCenterHMS" value="14:25:11.8"></div>
+            <div class="f"><label>Dec (D:M:S)</label><input type="text" id="decCenterDMS" value="51:51:02.7"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Defocus -->
+      <div class="step" data-step="3">
+        <div class="step-head" onclick="toggleStep(3)">
+          <span class="step-num">3</span>
+          <span class="step-label">Defocus & Output</span>
+          <span class="step-chevron">▾</span>
+        </div>
+        <div class="step-body">
+          <div class="fg">
+            <div class="f"><label>Focuser Steps</label><input type="number" id="defocusSteps" value="2442" step="100"></div>
+            <div class="f"><label>Direction</label>
+              <select id="defocusDir">
+                <option value="1">Extra-focal (+)</option>
+                <option value="-1">Intra-focal (−)</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:4px;">
+            <div class="f-row"><input type="checkbox" id="piCrop" checked><label for="piCrop">PI: Crop circle</label></div>
+            <div class="f-row"><input type="checkbox" id="piBin2" checked><label for="piBin2">PI: Bin 2×</label></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: Imaging & Pattern (live-tweakable) -->
+      <div class="step" data-step="4">
+        <div class="step-head" onclick="toggleStep(4)">
+          <span class="step-num">4</span>
+          <span class="step-label">Imaging & Pattern</span>
+          <span class="step-chevron">▾</span>
+        </div>
+        <div class="step-body">
+          <div class="fg">
+            <div class="f"><label>Exposure s</label><input type="number" id="exposureTime" value="8" step="1" min="1"></div>
+            <div class="f"><label>Filter</label><input type="text" id="filterName" value="R"></div>
+            <div class="f"><label>Gain</label><input type="number" id="gain" value="100" step="1"></div>
+            <div class="f"><label>Offset</label><input type="number" id="offset" value="0" step="1"></div>
+            <div class="f"><label>Binning</label>
+              <select id="binning"><option value="1">1×1</option><option value="2">2×2</option></select>
+            </div>
+            <div class="f"><label>Ring Positions</label><input type="number" id="numPositions" value="8" min="4" max="16"></div>
+            <div class="f"><label>Radius % FOV</label><input type="number" id="radiusPct" value="80" min="10" max="95" step="5"></div>
+            <div class="f"><label>Settle s</label><input type="number" id="settleTime" value="3" step="1" min="1" max="30"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:4px;">
+            <div class="f-row"><input type="checkbox" id="includeCenter" checked><label for="includeCenter">Center</label></div>
+            <div class="f-row"><input type="checkbox" id="useCircle" checked><label for="useCircle">Circle</label></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calculate Button -->
+      <div style="padding:10px 14px;flex-shrink:0;">
+        <button class="calc-btn" onclick="calculate()" style="width:100%;">▶ Calculate &amp; Generate</button>
+      </div>
+
+    </div>
+
+    <!-- ════ RIGHT: RESULTS ════ -->
+    <div class="main">
+      <div class="tabs">
+        <button class="tab active" onclick="showTab(this,'vis')">Preview</button>
+        <button class="tab" onclick="showTab(this,'table')">Positions</button>
+        <button class="tab" onclick="showTab(this,'nina')">NINA Sequence</button>
+        <button class="tab" onclick="showTab(this,'pix')">PixInsight Script</button>
+      </div>
+
+      <!-- Preview -->
+      <div id="tab-vis" class="tab-panel active">
+        <div class="cards" id="infoGrid"></div>
+        <div class="canvas-wrap">
+          <canvas id="sensorCanvas" width="640" height="440"></canvas>
+        </div>
+        <div id="seqSummary" class="flow-box" style="display:none;"></div>
+      </div>
+
+      <!-- Positions Table -->
+      <div id="tab-table" class="tab-panel">
+        <table class="pt">
+          <thead>
+            <tr><th>#</th><th>RA (H:M:S)</th><th>Dec (D:M:S)</th><th>RA°</th><th>Dec°</th><th>Δ Center</th><th>Action</th></tr>
+          </thead>
+          <tbody id="posTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- NINA JSON + Download -->
+      <div id="tab-nina" class="tab-panel">
+        <div class="dl-bar">
+          <button class="sbtn" onclick="downloadNinaJson()" id="btnNina" disabled>💾 Download .json</button>
+          <span class="dl-info" id="ninaDlInfo">Calculate first</span>
+        </div>
+        <div class="code" id="ninaOutput">Generating...</div>
+      </div>
+
+      <!-- PixInsight Script + Download -->
+      <div id="tab-pix" class="tab-panel">
+        <div class="dl-bar">
+          <button class="sbtn" onclick="downloadPixScript()" id="btnPix" disabled>💾 Download .js</button>
+          <span class="dl-info" id="pixDlInfo">Calculate first</span>
+        </div>
+        <div class="code" id="pixOutput">Generating...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STAR PRESETS
+// ============================================================
+const STAR_PRESETS = [
+  { name:"θ Boo",  ra:"14:25:11.8", dec:"51:51:02.7", mag:4.05, s:"sp", note:"Very isolated, ideal near zenith 52°N Apr/May" },
+  { name:"κ Dra",  ra:"12:33:28.9", dec:"69:47:17.6", mag:3.87, s:"sp", note:"Draco, extremely clean field, year-round >45° alt" },
+  { name:"λ Dra",  ra:"11:31:24.2", dec:"69:19:52.0", mag:3.84, s:"sp", note:"Near κ Dra, alternative in poor seeing" },
+  { name:"38 Lyn", ra:"09:18:50.6", dec:"36:48:09.4", mag:3.82, s:"sp", note:"Lynx, very sparse field, lower Dec" },
+  { name:"42 Dra", ra:"18:25:59.1", dec:"65:33:48.5", mag:4.82, s:"su", note:"★ Recommended! Perfect mag, extremely isolated" },
+  { name:"χ Dra",  ra:"18:21:03.4", dec:"72:43:58.2", mag:3.57, s:"su", note:"Northern Draco, circumpolar, clean field" },
+  { name:"CQ Dra", ra:"19:22:35.5", dec:"59:22:12.0", mag:4.96, s:"su", note:"Fainter, ideal for longer exposures" },
+  { name:"σ Dra",  ra:"19:32:21.6", dec:"69:39:40.2", mag:4.67, s:"su", note:"Well isolated, very northern" },
+  { name:"ξ Cep",  ra:"22:03:47.5", dec:"64:37:40.7", mag:4.29, s:"fa", note:"Cepheus, away from MW, well isolated" },
+  { name:"ι Cep",  ra:"22:49:40.8", dec:"66:12:01.5", mag:3.52, s:"fa", note:"Brighter but very clean field" },
+  { name:"θ Cep",  ra:"20:29:34.9", dec:"62:59:38.6", mag:4.22, s:"fa", note:"Early fall, good isolation" },
+  { name:"α Cam",  ra:"04:54:03.0", dec:"66:20:33.6", mag:4.29, s:"wi", note:"★ Recommended! Sparsest field in the sky" },
+  { name:"β Cam",  ra:"05:03:25.1", dec:"60:26:32.1", mag:4.03, s:"wi", note:"Near α Cam, slightly brighter" },
+  { name:"7 Cam",  ra:"04:57:17.2", dec:"53:45:08.5", mag:4.47, s:"wi", note:"Lower Dec, closer to zenith for 52°N" },
+  { name:"CS Cam", ra:"03:29:04.1", dec:"59:56:25.2", mag:4.21, s:"wi", note:"Early winter, Camelopardalis region" },
+];
+const STAGS = { sp:"s-sp", su:"s-su", fa:"s-fa", wi:"s-wi" };
+const SNAMES = { sp:"SPR", su:"SUM", fa:"FAL", wi:"WIN" };
+
+// ============================================================
+// COORD UTILS
+// ============================================================
+function parseHMS(s){if(!s)return 0;s=s.trim();const p=s.split(':').map(Number);return(p[0]||0)+(p[1]||0)/60+(p[2]||0)/3600;}
+function parseDMS(s){if(!s)return 0;s=s.trim();const n=s.startsWith('-');if(n)s=s.substring(1);const p=s.split(':').map(Number);const v=(Math.abs(p[0])||0)+(p[1]||0)/60+(p[2]||0)/3600;return n?-v:v;}
+function toHMS(h){h=((h%24)+24)%24;const H=Math.floor(h),rm=(h-H)*60,M=Math.floor(rm),S=Math.max(0,(rm-M)*60);return`${H}:${String(M).padStart(2,'0')}:${S.toFixed(1).padStart(4,'0')}`;}
+function toDMS(d){const n=d<0;d=Math.abs(d);const D=Math.floor(d),rm=(d-D)*60,M=Math.floor(rm),S=Math.max(0,(rm-M)*60);return`${n?'-':'+'}${D}:${String(M).padStart(2,'0')}:${S.toFixed(1).padStart(4,'0')}`;}
+function hmsJSON(raH,decD){const ra=((raH%24)+24)%24,rH=Math.floor(ra),rR=(ra-rH)*60,rM=Math.floor(rR),rS=Math.max(0,Math.round((rR-rM)*60*100)/100);const ng=decD<0,da=Math.abs(decD),dD=Math.floor(da),dR=(da-dD)*60,dM=Math.floor(dR),dS=Math.max(0,Math.round((dR-dM)*60*100)/100);return{RAHours:rH,RAMinutes:rM,RASeconds:rS,NegativeDec:ng,DecDegrees:dD,DecMinutes:dM,DecSeconds:dS};}
+
+// ============================================================
+// ZENITH & MAG ADVISOR
+// ============================================================
+function getJD(d){let Y=d.getUTCFullYear(),M=d.getUTCMonth()+1;const day=d.getUTCDate()+d.getUTCHours()/24+d.getUTCMinutes()/1440+d.getUTCSeconds()/86400;if(M<=2){Y--;M+=12;}const A=Math.floor(Y/100),B=2-A+Math.floor(A/4);return Math.floor(365.25*(Y+4716))+Math.floor(30.6001*(M+1))+day+B-1524.5;}
+function getLST(d,lon){const jd=getJD(d),T=(jd-2451545)/36525;let g=280.46061837+360.98564736629*(jd-2451545)+0.000387933*T*T-T*T*T/38710000;return(((g+lon)%360+360)%360)/15;}
+
+function calcBestStar(){
+  const lat=+$('obsLat').value,lon=+$('obsLon').value;
+  const sel=$('starTime').value;
+
+  // Build target Date based on selection
+  let targetDate;
+  const today=new Date();
+  if(sel==='now'){
+    targetDate=today;
+  } else if(sel==='dusk'){
+    targetDate=getDuskTime(today,lat,lon);
+  } else {
+    // Specific hour (local time) — tonight
+    const h=parseInt(sel);
+    targetDate=new Date(today);
+    if(h<12){
+      // After midnight = next calendar day
+      targetDate.setDate(targetDate.getDate()+1);
+    }
+    targetDate.setHours(h,0,0,0);
+  }
+
+  const lst=getLST(targetDate,lon);
+  const timeLabel=sel==='now'?'now':sel==='dusk'?`dusk (~${targetDate.getHours()}:${String(targetDate.getMinutes()).padStart(2,'0')})`:`${sel==='1'||sel==='3'||sel==='5'?'0'+sel:sel}:00 local`;
+
+  // Find best star: highest altitude at target time, HA < 3h
+  let best=null,bestAlt=-99;
+  const latR=lat*Math.PI/180;
+  STAR_PRESETS.forEach(p=>{
+    const pRA=parseHMS(p.ra),pDec=parseDMS(p.dec)*Math.PI/180;
+    let ha=lst-pRA; // hours
+    if(ha>12) ha-=24; if(ha<-12) ha+=24;
+    if(Math.abs(ha)>3) return; // skip if too far from meridian
+    const haR=ha*15*Math.PI/180;
+    const alt=Math.asin(Math.sin(latR)*Math.sin(pDec)+Math.cos(latR)*Math.cos(pDec)*Math.cos(haR))*180/Math.PI;
+    if(alt>bestAlt){bestAlt=alt;best=p;}
+  });
+
+  const el=$('zenithResult');el.style.display='block';
+  if(best){
+    $('raCenterHMS').value=best.ra;$('decCenterDMS').value=best.dec;
+    el.innerHTML=`@ ${timeLabel}: <span class="hl">${best.name}</span> m${best.mag} · Alt ≈ <span class="${bestAlt>60?'good':''}">${bestAlt.toFixed(0)}°</span><br>${best.note}`;
+  } else {
+    $('raCenterHMS').value=toHMS(lst);$('decCenterDMS').value=toDMS(lat);
+    el.innerHTML=`@ ${timeLabel}: no preset within ±3h HA. Raw zenith set.`;
+  }
+  updateMagAdvice();
+  openStep(2);
+  calculate();
+}
+
+// Approximate civil/astronomical dusk (sun at -12° below horizon)
+function getDuskTime(date,lat,lon){
+  const latR=lat*Math.PI/180;
+  const doy=Math.floor((date-new Date(date.getFullYear(),0,0))/86400000);
+  // Solar declination approximation
+  const decSun=23.45*Math.sin(2*Math.PI*(284+doy)/365)*Math.PI/180;
+  // Hour angle when sun is at -12° (astro twilight end)
+  const sunAlt=-12*Math.PI/180;
+  let cosHA=(Math.sin(sunAlt)-Math.sin(latR)*Math.sin(decSun))/(Math.cos(latR)*Math.cos(decSun));
+  cosHA=Math.max(-1,Math.min(1,cosHA));
+  const HA=Math.acos(cosHA)*180/Math.PI/15; // hours
+
+  // Solar noon in UTC
+  const eqTime=(-7.655*Math.sin(2*Math.PI*doy/365)+9.873*Math.sin(2*(2*Math.PI*doy/365)+3.5932))/60; // hours
+  const solarNoonUTC=12-lon/15-eqTime;
+  const duskUTC=solarNoonUTC+HA;
+
+  const dusk=new Date(date);
+  dusk.setUTCHours(Math.floor(duskUTC),Math.round((duskUTC%1)*60),0,0);
+  return dusk;
+}
+
+function updateMagAdvice(){
+  const fl=+$('focalLengthMm').value,ap=+$('apertureMm').value,exp=+$('exposureTime').value,g=+$('gain').value;
+  const fr=fl/ap,fF=2.5*Math.log10(fr*fr/64),eF=2.5*Math.log10(exp/8),gF=(g-100)*0.01;
+  const ideal=4.5+fF-eF-gF,lo=Math.max(2,ideal-1),hi=Math.min(8,ideal+1);
+  const el=$('magAdvice');el.style.display='block';
+  el.innerHTML=`f/${fr.toFixed(1)} ${exp}s G${g} → ideal mag <span class="hl">${ideal.toFixed(1)}</span> (${lo.toFixed(1)}–${hi.toFixed(1)})`;
+}
+
+// ============================================================
+// PRESETS
+// ============================================================
+function buildPresets(){
+  const g=$('presetGrid');g.innerHTML='';
+  STAR_PRESETS.forEach(p=>{
+    const d=document.createElement('div');d.className='preset';d.title=p.note;
+    d.onclick=()=>{$('raCenterHMS').value=p.ra;$('decCenterDMS').value=p.dec;calculate();};
+    d.innerHTML=`<span class="stag ${STAGS[p.s]}">${SNAMES[p.s]}</span><span class="pname">${p.name} ${p.ra}</span><span class="pmag">m${p.mag}</span>`;
+    g.appendChild(d);
+  });
+}
+
+// ============================================================
+// POSITIONS
+// ============================================================
+function calcPositions(raH,decD,fovW,fovH,n,pct,circle,center){
+  const pos=[];
+  if(center) pos.push({ra:raH,dec:decD,label:'Center'});
+  const minF=Math.min(fovW,fovH),rDeg=pct/100*(minF/2),cosDec=Math.cos(decD*Math.PI/180),step=2*Math.PI/n;
+  for(let i=0;i<n;i++){
+    const th=i*step;
+    let dRa,dDec;
+    if(circle){dDec=rDeg*Math.sin(th);dRa=rDeg*Math.cos(th)/cosDec;}
+    else{dRa=(pct/100*(fovW/2)*Math.cos(th))/cosDec;dDec=pct/100*(fovH/2)*Math.sin(th);}
+    pos.push({ra:raH+dRa/15,dec:decD+dDec,label:`Ring ${i+1}`});
+  }
+  return pos;
+}
+
+// ============================================================
+// NINA JSON
+// ============================================================
+function makeFilter(name){return{"$type":"NINA.Core.Model.Equipment.FilterInfo, NINA.Core","_name":name,"_focusOffset":0,"_position":0,"_autoFocusExposureTime":-1,"_autoFocusFilter":false,"FlatWizardFilterSettings":{"$type":"NINA.Core.Model.Equipment.FlatWizardFilterSettings, NINA.Core","FlatWizardMode":0,"HistogramMeanTarget":0.5,"HistogramTolerance":0.1,"MaxFlatExposureTime":1,"MinFlatExposureTime":0.01,"MaxAbsoluteFlatDeviceBrightness":100,"MinAbsoluteFlatDeviceBrightness":0,"Gain":-1,"Offset":-1,"Binning":{"$type":"NINA.Core.Model.Equipment.BinningMode, NINA.Core","X":1,"Y":1}},"_autoFocusBinning":{"$type":"NINA.Core.Model.Equipment.BinningMode, NINA.Core","X":1,"Y":1},"_autoFocusGain":-1,"_autoFocusOffset":-1};}
+function OC(t){return{"$type":`System.Collections.ObjectModel.ObservableCollection\`1[[${t}]], System.ObjectModel`,"$values":[]};}
+const CC="NINA.Sequencer.Conditions.ISequenceCondition, NINA.Sequencer";
+const II="NINA.Sequencer.SequenceItem.ISequenceItem, NINA.Sequencer";
+const TT="NINA.Sequencer.Trigger.ISequenceTrigger, NINA.Sequencer";
+const SS={"$type":"NINA.Sequencer.Container.ExecutionStrategy.SequentialStrategy, NINA.Sequencer"};
+
+function genNina(pos,P){
+  const bin=+P.binning,dfx=+P.defocusSteps*(+P.defocusDir),stl=+P.settleTime;
+  const items=[];
+  pos.forEach(p=>{
+    items.push({"$type":"NINA.Sequencer.SequenceItem.Telescope.SlewScopeToRaDec, NINA.Sequencer","Inherited":false,"Coordinates":{"$type":"NINA.Astrometry.InputCoordinates, NINA.Astrometry",...hmsJSON(p.ra,p.dec)},"ErrorBehavior":0,"Attempts":1});
+    items.push({"$type":"NINA.Sequencer.SequenceItem.Utility.WaitForTimeSpan, NINA.Sequencer","Time":stl,"ErrorBehavior":0,"Attempts":1});
+    items.push({"$type":"NINA.Sequencer.SequenceItem.Imaging.TakeExposure, NINA.Sequencer","ExposureTime":P.exposureTime,"ExposureCount":0,"Gain":P.gain,"Offset":P.offset,"Binning":{"$type":"NINA.Core.Model.Equipment.BinningMode, NINA.Core","X":bin,"Y":bin},"ImageType":"LIGHT","ErrorBehavior":0,"Attempts":1});
+  });
+  return {
+    "$type":"NINA.Sequencer.Container.SequenceRootContainer, NINA.Sequencer","Strategy":SS,
+    "Name":"SKW Collimation Sequence","Conditions":OC(CC),"IsExpanded":true,
+    "Items":{"$type":`System.Collections.ObjectModel.ObservableCollection\`1[[${II}]], System.ObjectModel`,"$values":[
+      {"$type":"NINA.Sequencer.Container.StartAreaContainer, NINA.Sequencer","Strategy":SS,"Name":"Start — Center & Defocus","Conditions":OC(CC),"IsExpanded":true,
+        "Items":{"$type":`System.Collections.ObjectModel.ObservableCollection\`1[[${II}]], System.ObjectModel`,"$values":[
+          {"$type":"NINA.Sequencer.SequenceItem.FilterWheel.SwitchFilter, NINA.Sequencer","Filter":makeFilter(P.filterName),"ErrorBehavior":0,"Attempts":1},
+          {"$type":"NINA.Sequencer.SequenceItem.Platesolving.Center, NINA.Sequencer","Inherited":false,"Coordinates":{"$type":"NINA.Astrometry.InputCoordinates, NINA.Astrometry",...hmsJSON(pos[0].ra,pos[0].dec)},"ErrorBehavior":0,"Attempts":3},
+          {"$type":"NINA.Sequencer.SequenceItem.Focuser.MoveFocuserRelative, NINA.Sequencer","RelativePosition":dfx,"ErrorBehavior":0,"Attempts":1}
+        ]},"Triggers":OC(TT),"ErrorBehavior":0,"Attempts":1},
+      {"$type":"NINA.Sequencer.Container.TargetAreaContainer, NINA.Sequencer","Strategy":SS,"Name":"SKW Positions — Slew only (defocused)","Conditions":OC(CC),"IsExpanded":true,
+        "Items":{"$type":`System.Collections.ObjectModel.ObservableCollection\`1[[${II}]], System.ObjectModel`,"$values":items},
+        "Triggers":OC(TT),"ErrorBehavior":0,"Attempts":1},
+      {"$type":"NINA.Sequencer.Container.EndAreaContainer, NINA.Sequencer","Strategy":SS,"Name":"End — Refocus","Conditions":OC(CC),"IsExpanded":true,
+        "Items":{"$type":`System.Collections.ObjectModel.ObservableCollection\`1[[${II}]], System.ObjectModel`,"$values":[
+          {"$type":"NINA.Sequencer.SequenceItem.Focuser.MoveFocuserRelative, NINA.Sequencer","RelativePosition":-dfx,"ErrorBehavior":0,"Attempts":1}
+        ]},"Triggers":OC(TT),"ErrorBehavior":0,"Attempts":1}
+    ]},"Triggers":OC(TT),"ErrorBehavior":0,"Attempts":1
+  };
+}
+
+// ============================================================
+// PIXINSIGHT SCRIPT
+// ============================================================
+function genPix(pos,P){
+  const crop=$('piCrop').checked,bin=$('piBin2').checked,n=pos.length;
+  let s=`// SKW Collimation Integrator — PixInsight Script\n// Generated by SKW Coordinator v5 — @joergsflow\n// Integrates ${n} defocused sub-frames into one FITS for SKW.\n// Workflow: NINA sequence → this script → load in SKW\n//\n`;
+  pos.forEach((p,i)=>{s+=`//  ${String(i).padStart(2)} ${p.label.padEnd(8)} RA ${toHMS(p.ra)}  Dec ${toDMS(p.dec)}\n`;});
+  s+=`//\n// ${P.focalLength}mm f/${(P.focalLength/P.aperture).toFixed(1)}  ${P.sensorW}×${P.sensorH}mm  ${P.exposureTime}s ${P.filterName} G${P.gain}\n\n`;
+  s+=`#feature-id   SKW_CollimationIntegrator\n#include <pjsr/DataType.jsh>\n#include <pjsr/UndoFlag.jsh>\n\nfunction main() {\n`;
+  s+=`   var ofd = new OpenFileDialog;\n   ofd.multipleSelections = true;\n   ofd.caption = "Select ${n} SKW collimation FITS frames";\n   ofd.filters = [["FITS Files", "*.fits;*.fit;*.fts"]];\n   if (!ofd.execute()) { Console.writeln("Cancelled."); return; }\n\n`;
+  s+=`   var files = ofd.fileNames;\n   Console.writeln("Selected: " + files.length + " files.");\n   if (files.length < 2) { Console.criticalln("Need at least 2 frames."); return; }\n   files.sort();\n\n`;
+  s+=`   Console.writeln("\\nIntegrating " + files.length + " frames...");\n   var P = new ImageIntegration;\n   P.combination = ImageIntegration.prototype.Average;\n   P.weightMode = ImageIntegration.prototype.DontCare;\n   P.normalization = ImageIntegration.prototype.NoNormalization;\n   P.rejection = ImageIntegration.prototype.NoRejection;\n   P.generateDrizzleData = false;\n   P.generateIntegratedImage = true;\n   P.generate64BitResult = false;\n   P.evaluateNoise = false;\n   P.noGUIMessages = true;\n\n`;
+  s+=`   var imageList = [];\n   for (var i = 0; i < files.length; i++)\n      imageList.push([true, files[i], "", "", ""]);\n   P.images = imageList;\n   P.executeGlobal();\n\n`;
+  s+=`   var intWin = ImageWindow.activeWindow;\n   if (intWin.isNull) { Console.criticalln("Integration failed."); return; }\n   intWin.mainView.id = "SKW_Integrated";\n   Console.writeln("Integration OK: " + intWin.mainView.id);\n`;
+  if(crop){s+=`\n   var w = intWin.mainView.image.width, h = intWin.mainView.image.height;\n   var radius = Math.min(w,h)/2, cx = Math.round(w/2-radius), cy = Math.round(h/2-radius), sz = Math.round(radius*2);\n   if (cx > 0 || cy > 0) {\n      var C = new Crop; C.leftMargin=-cx; C.topMargin=-cy; C.rightMargin=-(w-cx-sz); C.bottomMargin=-(h-cy-sz);\n      C.mode = Crop.prototype.AbsolutePixels; C.noGUIMessages = true; C.executeOn(intWin.mainView);\n      Console.writeln("Cropped: " + sz + "x" + sz);\n   }\n`;}
+  if(bin){s+=`\n   var R = new IntegerResample; R.zoomFactor = -2; R.downsamplingMode = IntegerResample.prototype.Average;\n   R.noGUIMessages = true; R.executeOn(intWin.mainView);\n   Console.writeln("Binned 2x: " + intWin.mainView.image.width + "x" + intWin.mainView.image.height);\n`;}
+  s+=`\n   var outDir = File.extractDrive(files[0]) + File.extractDirectory(files[0]);\n   var outPath = outDir + "/SKW_Collimation_Integrated.fits";\n   var F = new FileFormat("FITS", false, true), f = new FileFormatInstance(F);\n   if (!f.create(outPath, "")) { Console.criticalln("Cannot create file."); return; }\n   f.setOptions({ bitsPerSample: 16, ieeefpSampleFormat: false });\n   if (!f.writeImage(intWin.mainView.image)) { Console.criticalln("Write error."); f.close(); return; }\n   f.close();\n   Console.writeln("\\n✓ Saved: " + outPath);\n   Console.writeln("Done — load file in SKW for field analysis.");\n}\n\nmain();\n`;
+  return s;
+}
+
+// ============================================================
+// VISUALIZATION
+// ============================================================
+function drawSensor(pos,fovW,fovH,raC,decC){
+  const c=$('sensorCanvas'),ctx=c.getContext('2d'),W=c.width,H=c.height;
+  ctx.clearRect(0,0,W,H);
+  const sW=+$('sensorWidthMm').value,sH=+$('sensorHeightMm').value,asp=sW/sH,pad=24;
+  let dW=W-2*pad,dH=dW/asp;if(dH>H-2*pad){dH=H-2*pad;dW=dH*asp;}
+  const ox=(W-dW)/2,oy=(H-dH)/2,cx=ox+dW/2,cy=oy+dH/2;
+  const cosD=Math.cos(decC*Math.PI/180); // projection factor
+
+  ctx.fillStyle='#080a10';ctx.fillRect(ox,oy,dW,dH);
+  ctx.strokeStyle='#1a1e2a';ctx.lineWidth=0.5;
+  for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(ox+dW*i/4,oy);ctx.lineTo(ox+dW*i/4,oy+dH);ctx.stroke();ctx.beginPath();ctx.moveTo(ox,oy+dH*i/4);ctx.lineTo(ox+dW,oy+dH*i/4);ctx.stroke();}
+  ctx.strokeStyle='#222840';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(cx,oy);ctx.lineTo(cx,oy+dH);ctx.moveTo(ox,cy);ctx.lineTo(ox+dW,cy);ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle='#2a3050';ctx.lineWidth=1;ctx.strokeRect(ox,oy,dW,dH);
+
+  // Helper: RA/Dec offset → canvas pixel (tangent-plane projection)
+  function toPixel(p){
+    const dRaDeg=(p.ra-raC)*15*cosD; // true angular offset on sky
+    const dDecDeg=p.dec-decC;
+    return {
+      x: cx+(dRaDeg/fovW)*dW,
+      y: cy-(dDecDeg/fovH)*dH
+    };
+  }
+
+  const ring=pos.filter(p=>p.label!=='Center');
+  if(ring.length>0){const pp=toPixel(ring[0]),r=Math.sqrt((pp.x-cx)**2+(pp.y-cy)**2);ctx.strokeStyle='rgba(91,141,239,0.12)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.stroke();}
+
+  pos.forEach((p,i)=>{
+    const {x,y}=toPixel(p),isC=p.label==='Center';
+    const oR=isC?10:7,iR=isC?4:3;
+    ctx.beginPath();ctx.arc(x,y,oR+3,0,2*Math.PI);ctx.fillStyle=isC?'rgba(239,68,68,0.06)':'rgba(91,141,239,0.06)';ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,oR,0,2*Math.PI);ctx.strokeStyle=isC?'#ef4444':'#5b8def';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.beginPath();ctx.arc(x,y,iR,0,2*Math.PI);ctx.fillStyle='#080a10';ctx.fill();ctx.strokeStyle=isC?'rgba(239,68,68,0.4)':'rgba(91,141,239,0.4)';ctx.lineWidth=0.8;ctx.stroke();
+    ctx.fillStyle=isC?'#ef4444':'#6a7498';ctx.font='10px "Outfit",sans-serif';ctx.textAlign='center';ctx.fillText(isC?'C':String(i),x,y+oR+12);
+  });
+
+  ctx.fillStyle='#3a4060';ctx.font='9px "JetBrains Mono",monospace';
+  ctx.textAlign='left';ctx.fillText(`${(fovW*60).toFixed(1)}' × ${(fovH*60).toFixed(1)}'`,ox+3,oy+dH+13);
+  ctx.textAlign='right';const ps=(+$('pixelSize').value/(+$('focalLengthMm').value))*206.265;
+  ctx.fillText(`${ps.toFixed(2)}"/px`,ox+dW-3,oy+dH+13);
+}
+
+// ============================================================
+// MAIN CALCULATE
+// ============================================================
+let curPos=[],curNina='',curPix='';
+
+function calculate(){
+  const raC=parseHMS($('raCenterHMS').value),decC=parseDMS($('decCenterDMS').value);
+  const fl=+$('focalLengthMm').value,ap=+$('apertureMm').value;
+  const sW=+$('sensorWidthMm').value,sH=+$('sensorHeightMm').value;
+  const nR=+$('numPositions').value,rPct=+$('radiusPct').value;
+  const circle=$('useCircle').checked,center=$('includeCenter').checked;
+  const px=+$('pixelSize').value;
+  const fovW=(sW/fl)*(180/Math.PI),fovH=(sH/fl)*(180/Math.PI);
+  const pxS=(px/fl)*206.265,resW=Math.round(sW*1000/px),resH=Math.round(sH*1000/px),fR=fl/ap;
+
+  curPos=calcPositions(raC,decC,fovW,fovH,nR,rPct,circle,center);
+
+  const P={exposureTime:+$('exposureTime').value,filterName:$('filterName').value,gain:+$('gain').value,offset:+$('offset').value,binning:$('binning').value,defocusSteps:$('defocusSteps').value,defocusDir:$('defocusDir').value,settleTime:$('settleTime').value,focalLength:fl,aperture:ap,sensorW:sW,sensorH:sH};
+
+  const ninaObj=genNina(curPos,P);
+  curNina=JSON.stringify(ninaObj,null,2);
+  $('ninaOutput').textContent=curNina;
+
+  curPix=genPix(curPos,P);
+  $('pixOutput').textContent=curPix;
+
+  const minF=Math.min(fovW,fovH),ringAm=rPct/100*(minF/2)*60;
+  const totalT=curPos.length*(P.exposureTime+(+P.settleTime)+3);
+  const dfx=(+P.defocusSteps)*(+P.defocusDir);
+
+  $('infoGrid').innerHTML=`
+    <div class="card"><div class="cl">FOV</div><div class="cv">${(fovW*60).toFixed(1)}' × ${(fovH*60).toFixed(1)}'</div></div>
+    <div class="card"><div class="cl">Scale</div><div class="cv">${pxS.toFixed(2)}"/px</div></div>
+    <div class="card"><div class="cl">f/</div><div class="cv">f/${fR.toFixed(1)}</div></div>
+    <div class="card"><div class="cl">Positions</div><div class="cv">${curPos.length}</div></div>
+    <div class="card"><div class="cl">Ring</div><div class="cv">${ringAm.toFixed(1)}'</div></div>
+    <div class="card"><div class="cl">~Time</div><div class="cv">${Math.ceil(totalT)}s</div></div>`;
+
+  const sum=$('seqSummary');sum.style.display='block';
+  sum.innerHTML=`<strong>Sequence:</strong> Filter → <span class="hl">${P.filterName}</span> · <span class="hl">Slew & Center</span> (platesolve, in focus) · <span class="hl">Defocus ${dfx>0?'+':''}${dfx}</span> steps · ${curPos.length}× <span class="hl">SlewToRaDec</span> → ${P.settleTime}s settle → ${P.exposureTime}s exp · <span class="hl">Refocus ${-dfx>0?'+':''}${-dfx}</span> steps`;
+
+  drawSensor(curPos,fovW,fovH,raC,decC);
+
+  const tb=$('posTableBody');tb.innerHTML='';
+  curPos.forEach((p,i)=>{
+    const cosD=Math.cos(decC*Math.PI/180);
+    const dRa=(p.ra-raC)*15*cosD*60,dDec=(p.dec-decC)*60,dist=Math.sqrt(dRa*dRa+dDec*dDec);
+    const act=(i===0&&p.label==='Center')?'Center (platesolve)':'SlewToRaDec';
+    const r=document.createElement('tr');if(p.label==='Center')r.className='crow';
+    r.innerHTML=`<td>${p.label}</td><td>${toHMS(p.ra)}</td><td>${toDMS(p.dec)}</td><td>${(p.ra*15).toFixed(4)}</td><td>${p.dec.toFixed(4)}</td><td>${dist.toFixed(1)}'</td><td style="font-size:0.6rem;color:${act.includes('Center')?'var(--warn)':'var(--text-dim)'}">${act}</td>`;
+    tb.appendChild(r);
+  });
+
+  $('btnNina').disabled=false;$('btnPix').disabled=false;
+  const fname=`SKW_Collimation_${curPos.length}pos_${$('raCenterHMS').value.replace(/:/g,'h').replace(/\./g,'')}`;
+  $('ninaDlInfo').textContent=`${fname}.json · ${(curNina.length/1024).toFixed(1)} KB`;
+  $('pixDlInfo').textContent=`SKW_Collimation_Integrator.js · ${(curPix.length/1024).toFixed(1)} KB`;
+
+  updateMagAdvice();
+  markStepsDone();
+}
+
+// ============================================================
+// DOWNLOADS
+// ============================================================
+function downloadNinaJson(){if(!curNina)return;const fn=`SKW_Collimation_${curPos.length}pos_${$('raCenterHMS').value.replace(/:/g,'h').replace(/\./g,'')}.json`;dl(curNina,fn,'application/json');}
+function downloadPixScript(){if(!curPix)return;dl(curPix,'SKW_Collimation_Integrator.js','text/javascript');}
+function dl(c,f,t){const b=new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=f;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
+
+// ============================================================
+// UI: Accordion Steps
+// ============================================================
+function $(id){return document.getElementById(id);}
+
+function toggleStep(n){
+  const el=document.querySelector(`.step[data-step="${n}"]`);
+  if(el.classList.contains('expanded')) el.classList.remove('expanded');
+  else openStep(n);
+}
+
+function openStep(n){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('expanded'));
+  const el=document.querySelector(`.step[data-step="${n}"]`);
+  if(el) el.classList.add('expanded');
+}
+
+function markStepsDone(){
+  document.querySelectorAll('.step').forEach(s=>{
+    const n=+s.dataset.step;
+    if(n<5) s.classList.add('done');
+  });
+}
+
+function showTab(btn,name){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  $('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load',()=>{
+  buildPresets();
+  updateMagAdvice();
+  calcBestStar();
+  calculate();
+});
+
+// Real-time recalculate when tweaking imaging/pattern/defocus (steps 3 & 4)
+const liveIds = [
+  'exposureTime','filterName','gain','offset','binning',
+  'numPositions','radiusPct','settleTime',
+  'defocusSteps','defocusDir'
+];
+liveIds.forEach(id=>{
+  const el=$(id);
+  if(!el) return;
+  el.addEventListener('input', debounce(calculate, 250));
+  el.addEventListener('change', calculate);
+});
+// Checkboxes: instant
+['includeCenter','useCircle','piCrop','piBin2'].forEach(id=>{
+  $(id).addEventListener('change', calculate);
+});
+// RA/Dec: recalc on change (not every keystroke)
+['raCenterHMS','decCenterDMS'].forEach(id=>{
+  $(id).addEventListener('change', calculate);
+});
+// Telescope params: recalc + mag advice
+['focalLengthMm','apertureMm','sensorWidthMm','sensorHeightMm','pixelSize'].forEach(id=>{
+  const el=$(id);
+  el.addEventListener('input', debounce(()=>{ updateMagAdvice(); calculate(); }, 300));
+  el.addEventListener('change', ()=>{ updateMagAdvice(); calculate(); });
+});
+
+function debounce(fn, ms){
+  let t;
+  return function(...args){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,args), ms); };
+}
+</script>
+</body>
+</html>
