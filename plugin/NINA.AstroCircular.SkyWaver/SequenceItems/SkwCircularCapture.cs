@@ -4,8 +4,11 @@ using NINA.AstroCircular.SkyWaver.Models;
 using NINA.AstroCircular.SkyWaver.Utility;
 using NINA.Core.Model;
 using NINA.Core.Model.Equipment;
+using NINA.Core.Utility;
 using NINA.Equipment.Interfaces.Mediator;
-using NINA.Image.ImageData;
+using NINA.Equipment.Model;
+using NINA.Image.FileFormat;
+using NINA.Image.Interfaces;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.SequenceItem;
 using System;
@@ -31,7 +34,6 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
         private readonly ITelescopeMediator telescopeMediator;
         private readonly ICameraMediator cameraMediator;
         private readonly IImagingMediator imagingMediator;
-        private readonly IImageSaveMediator imageSaveMediator;
         private readonly IProfileService profileService;
 
         // ── Target Star ──
@@ -98,12 +100,10 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
             ITelescopeMediator telescopeMediator,
             ICameraMediator cameraMediator,
             IImagingMediator imagingMediator,
-            IImageSaveMediator imageSaveMediator,
             IProfileService profileService) {
             this.telescopeMediator = telescopeMediator;
             this.cameraMediator = cameraMediator;
             this.imagingMediator = imagingMediator;
-            this.imageSaveMediator = imageSaveMediator;
             this.profileService = profileService;
         }
 
@@ -111,7 +111,6 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
             cloneMe.telescopeMediator,
             cloneMe.cameraMediator,
             cloneMe.imagingMediator,
-            cloneMe.imageSaveMediator,
             cloneMe.profileService) {
             CopyMetaData(cloneMe);
         }
@@ -203,33 +202,10 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
                 });
 
                 try {
-                    var captureSequence = new CaptureSequence(
-                        ExposureTime,
-                        CaptureSequence.ImageTypes.LIGHT,
-                        new FilterInfo(FilterName),
-                        new BinningMode(Binning, Binning),
-                        1) {
-                        Gain = Gain,
-                        Offset = Offset
-                    };
-
-                    var exposureData = await imagingMediator.CaptureImage(captureSequence, ct, progress);
-
-                    if (exposureData != null) {
-                        // Save the sub-frame to the output directory
-                        string fileName = $"SKW_{posLabel}_{i:D2}.fits";
-                        string filePath = Path.Combine(OutputDirectory, fileName);
-
-                        var fileSaveInfo = new FileSaveInfo {
-                            FilePath = OutputDirectory,
-                            FilePattern = $"SKW_{posLabel}_{i:D2}",
-                            FileType = NINA.Core.Enum.FileTypeEnum.FITS
-                        };
-
-                        await exposureData.SaveToDisk(fileSaveInfo, ct);
-                        CapturedFiles.Add(filePath);
+                    string savedPath = await CaptureAndSaveFrame(posLabel, i, progress, ct);
+                    if (savedPath != null) {
+                        CapturedFiles.Add(savedPath);
                         captured++;
-
                         progress?.Report(new ApplicationStatus {
                             Status = $"SKW: Saved {pos.Label} ({captured}/{total})"
                         });
@@ -238,26 +214,9 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
                     // Retry once on capture failure
                     Logger.Warning($"SKW: Capture at {pos.Label} failed, retrying: {ex.Message}");
                     try {
-                        var retrySequence = new CaptureSequence(
-                            ExposureTime,
-                            CaptureSequence.ImageTypes.LIGHT,
-                            new FilterInfo(FilterName),
-                            new BinningMode(Binning, Binning),
-                            1) {
-                            Gain = Gain,
-                            Offset = Offset
-                        };
-                        var retryData = await imagingMediator.CaptureImage(retrySequence, ct, progress);
-                        if (retryData != null) {
-                            string fileName = $"SKW_{posLabel}_{i:D2}.fits";
-                            string filePath = Path.Combine(OutputDirectory, fileName);
-                            var fileSaveInfo = new FileSaveInfo {
-                                FilePath = OutputDirectory,
-                                FilePattern = $"SKW_{posLabel}_{i:D2}",
-                                FileType = NINA.Core.Enum.FileTypeEnum.FITS
-                            };
-                            await retryData.SaveToDisk(fileSaveInfo, ct);
-                            CapturedFiles.Add(filePath);
+                        string savedPath = await CaptureAndSaveFrame(posLabel, i, progress, ct);
+                        if (savedPath != null) {
+                            CapturedFiles.Add(savedPath);
                             captured++;
                         }
                     } catch (Exception retryEx) {
@@ -274,6 +233,41 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
             progress?.Report(new ApplicationStatus {
                 Status = $"SKW: Circular capture complete — {captured}/{total} frames in {OutputDirectory}"
             });
+        }
+
+        /// <summary>
+        /// Capture a single exposure and save it as FITS to the output directory.
+        /// Uses NINA's standard capture flow: CaptureImage → ToImageData → SaveToDisk.
+        /// </summary>
+        private async Task<string> CaptureAndSaveFrame(string posLabel, int index,
+            IProgress<ApplicationStatus> progress, CancellationToken ct) {
+
+            var captureSequence = new CaptureSequence(
+                ExposureTime,
+                CaptureSequence.ImageTypes.LIGHT,
+                new FilterInfo(FilterName, 0, 0),
+                new BinningMode(Binning, Binning),
+                1) {
+                Gain = Gain,
+                Offset = Offset
+            };
+
+            var exposureData = await imagingMediator.CaptureImage(captureSequence, ct, progress);
+            if (exposureData == null) return null;
+
+            // Convert exposure data to image data for saving
+            var imageData = await exposureData.ToImageData(progress, ct);
+            if (imageData == null) return null;
+
+            // Save as FITS to our output directory
+            var fileSaveInfo = new FileSaveInfo(profileService) {
+                FilePath = OutputDirectory,
+                FilePattern = $"SKW_{posLabel}_{index:D2}",
+                FileType = NINA.Core.Enum.FileTypeEnum.FITS
+            };
+
+            string savedPath = await imageData.SaveToDisk(fileSaveInfo, ct);
+            return savedPath;
         }
 
         public override string ToString() {

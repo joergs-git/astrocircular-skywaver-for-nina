@@ -5,9 +5,9 @@ using NINA.AstroCircular.SkyWaver.SequenceItems;
 using NINA.AstroCircular.SkyWaver.Utility;
 using NINA.Core.Model;
 using NINA.Core.Model.Equipment;
+using NINA.Core.Utility;
 using NINA.Equipment.Interfaces.Mediator;
 using NINA.Image.Interfaces;
-using NINA.PlateSolving.Interfaces;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.SequenceItem;
 using System;
@@ -38,7 +38,6 @@ namespace NINA.AstroCircular.SkyWaver.SequenceContainers {
         private readonly ITelescopeMediator telescopeMediator;
         private readonly ICameraMediator cameraMediator;
         private readonly IImagingMediator imagingMediator;
-        private readonly IImageSaveMediator imageSaveMediator;
         private readonly IFilterWheelMediator filterWheelMediator;
         private readonly IProfileService profileService;
         private readonly IImageDataFactory imageDataFactory;
@@ -135,7 +134,6 @@ namespace NINA.AstroCircular.SkyWaver.SequenceContainers {
             ITelescopeMediator telescopeMediator,
             ICameraMediator cameraMediator,
             IImagingMediator imagingMediator,
-            IImageSaveMediator imageSaveMediator,
             IFilterWheelMediator filterWheelMediator,
             IProfileService profileService,
             IImageDataFactory imageDataFactory) {
@@ -143,7 +141,6 @@ namespace NINA.AstroCircular.SkyWaver.SequenceContainers {
             this.telescopeMediator = telescopeMediator;
             this.cameraMediator = cameraMediator;
             this.imagingMediator = imagingMediator;
-            this.imageSaveMediator = imageSaveMediator;
             this.filterWheelMediator = filterWheelMediator;
             this.profileService = profileService;
             this.imageDataFactory = imageDataFactory;
@@ -154,7 +151,6 @@ namespace NINA.AstroCircular.SkyWaver.SequenceContainers {
             cloneMe.telescopeMediator,
             cloneMe.cameraMediator,
             cloneMe.imagingMediator,
-            cloneMe.imageSaveMediator,
             cloneMe.filterWheelMediator,
             cloneMe.profileService,
             cloneMe.imageDataFactory) {
@@ -207,7 +203,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceContainers {
             try {
                 // ── Step 1: Switch filter ──
                 progress?.Report(new ApplicationStatus { Status = $"SKW: Switching to filter {FilterName}" });
-                await filterWheelMediator.ChangeFilter(new FilterInfo(FilterName), ct);
+                await filterWheelMediator.ChangeFilter(new FilterInfo(FilterName, 0, 0), ct);
 
                 // ── Step 2: Plate-solve and center on target star (IN FOCUS) ──
                 progress?.Report(new ApplicationStatus {
@@ -232,7 +228,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceContainers {
                 // ── Step 4: Circular capture ──
                 var capture = new SkwCircularCapture(
                     telescopeMediator, cameraMediator, imagingMediator,
-                    imageSaveMediator, profileService) {
+                    profileService) {
                     TargetRA = TargetRA,
                     TargetDec = TargetDec,
                     RingPositions = RingPositions,

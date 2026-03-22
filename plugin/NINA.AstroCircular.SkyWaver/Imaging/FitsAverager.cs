@@ -1,9 +1,7 @@
-using NINA.Image.ImageData;
 using NINA.Image.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,7 +38,7 @@ namespace NINA.AstroCircular.SkyWaver.Imaging {
             }
 
             // Load first frame to get dimensions
-            var firstImage = await imageDataFactory.CreateFromFile(inputFiles[0], 16, false, ct);
+            var firstImage = await imageDataFactory.CreateFromFile(inputFiles[0], 16, false, NINA.Core.Enum.RawConverterEnum.FREEIMAGE, ct);
             int width = firstImage.Properties.Width;
             int height = firstImage.Properties.Height;
             int pixelCount = width * height;
@@ -59,7 +57,7 @@ namespace NINA.AstroCircular.SkyWaver.Imaging {
 
                 if (!File.Exists(inputFiles[f])) continue;
 
-                var image = await imageDataFactory.CreateFromFile(inputFiles[f], 16, false, ct);
+                var image = await imageDataFactory.CreateFromFile(inputFiles[f], 16, false, NINA.Core.Enum.RawConverterEnum.FREEIMAGE, ct);
                 if (image.Properties.Width != width || image.Properties.Height != height) {
                     // Skip frames with mismatched dimensions
                     continue;

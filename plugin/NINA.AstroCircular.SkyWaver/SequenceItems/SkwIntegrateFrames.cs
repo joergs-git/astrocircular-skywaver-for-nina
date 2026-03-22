@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 using NINA.AstroCircular.SkyWaver.Imaging;
 using NINA.Core.Model;
-using NINA.Image.ImageData;
+using NINA.Core.Utility;
 using NINA.Image.Interfaces;
 using NINA.Sequencer.SequenceItem;
 using System;
@@ -146,30 +146,14 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
                 FocalLengthMm, PixelSizeUm, CaptureBinning, BinToHalf,
                 ExposureSeconds, -999, FilterName); // -999 placeholder for CCD temp
 
-            // Step 6: Save output FITS
+            // Step 6: Save output FITS using raw FITS writer
+            // We write a minimal valid FITS file directly rather than going through
+            // NINA's image pipeline, since we're creating data from scratch (not a capture).
             string outputDir = !string.IsNullOrEmpty(OutputDirectory) ? OutputDirectory : InputDirectory;
             Directory.CreateDirectory(outputDir);
             string outputPath = Path.Combine(outputDir, OutputFileName);
 
-            // Create ImageData and save via NINA's pipeline
-            var imageProperties = new ImageProperties(width, height, 16, false);
-            var imageData = imageDataFactory.CreateBaseImageData(pixelData, width, height, 16, false, new ImageMetaData());
-
-            // Write FITS keywords from our header dictionary
-            foreach (var kvp in headers) {
-                imageData.MetaData.GenericHeaders.Add(
-                    new NINA.Image.ImageData.ImageMetaData.GenericHeader {
-                        Key = kvp.Key,
-                        Value = kvp.Value.ToString()
-                    });
-            }
-
-            var fileSaveInfo = new FileSaveInfo {
-                FilePath = outputDir,
-                FilePattern = Path.GetFileNameWithoutExtension(OutputFileName),
-                FileType = NINA.Core.Enum.FileTypeEnum.FITS
-            };
-            await imageData.SaveToDisk(fileSaveInfo, ct);
+            RawFitsWriter.Write(outputPath, pixelData, width, height, headers);
 
             progress?.Report(new ApplicationStatus {
                 Status = $"SKW: Saved integrated FITS to {outputPath}"
