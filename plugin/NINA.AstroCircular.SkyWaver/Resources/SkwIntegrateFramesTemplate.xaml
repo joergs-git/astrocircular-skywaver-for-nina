@@ -1,18 +1,1 @@
-<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:NINA.AstroCircular.SkyWaver.SequenceItems">
-
-    <!-- Inline sequencer display for SkwIntegrateFrames -->
-    <DataTemplate DataType="{x:Type local:SkwIntegrateFrames}">
-        <StackPanel Orientation="Horizontal">
-            <TextBlock Text="SKW Integrate → " />
-            <TextBlock Text="{Binding OutputDirectory}" FontWeight="Bold" />
-            <TextBlock Text=" | Crop: " />
-            <TextBlock Text="{Binding CropToCircle}" />
-            <TextBlock Text=" | Bin2: " />
-            <TextBlock Text="{Binding BinToHalf}" />
-        </StackPanel>
-    </DataTemplate>
-
-</ResourceDictionary>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" />
