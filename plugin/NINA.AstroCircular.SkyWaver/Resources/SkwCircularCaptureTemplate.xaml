@@ -1,1 +1,20 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" />
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:NINA.AstroCircular.SkyWaver.SequenceItems">
+
+    <!-- Inline sequencer display for SkwCircularCapture -->
+    <DataTemplate DataType="{x:Type local:SkwCircularCapture}">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="SKW Capture: " />
+            <TextBlock Text="{Binding RingPositions}" FontWeight="Bold" />
+            <TextBlock Text=" pos @ " />
+            <TextBlock Text="{Binding RadiusPercent}" />
+            <TextBlock Text="% | " />
+            <TextBlock Text="{Binding ExposureTime}" />
+            <TextBlock Text="s " />
+            <TextBlock Text="{Binding FilterName}" />
+        </StackPanel>
+    </DataTemplate>
+
+</ResourceDictionary>

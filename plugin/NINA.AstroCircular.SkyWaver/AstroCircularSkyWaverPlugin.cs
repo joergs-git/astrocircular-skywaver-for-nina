@@ -12,12 +12,20 @@ namespace NINA.AstroCircular.SkyWaver {
     public class AstroCircularSkyWaverPlugin : PluginBase, INotifyPropertyChanged {
         private readonly IProfileService profileService;
 
+        /// <summary>
+        /// Plugin-level settings bound to the Options page.
+        /// Persisted in NINA's plugin settings store.
+        /// </summary>
         public SkwSettings Settings { get; }
 
         [ImportingConstructor]
         public AstroCircularSkyWaverPlugin(IProfileService profileService) {
             this.profileService = profileService;
             Settings = new SkwSettings();
+
+            // Load saved settings from NINA profile if available
+            // Settings are auto-persisted via NINA's plugin settings mechanism
+            // when using {Binding Settings.PropertyName} in the options XAML
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

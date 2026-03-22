@@ -1,1 +1,16 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" />
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:NINA.AstroCircular.SkyWaver.SequenceItems">
+
+    <!-- Inline sequencer display for SkwDefocus -->
+    <DataTemplate DataType="{x:Type local:SkwDefocus}">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="SKW Defocus: " />
+            <TextBlock Text="{Binding DefocusSteps}" FontWeight="Bold" />
+            <TextBlock Text=" steps " />
+            <TextBlock Text="{Binding DirectionLabel}" />
+        </StackPanel>
+    </DataTemplate>
+
+</ResourceDictionary>

@@ -1,1 +1,4 @@
+<!-- This file is intentionally empty.
+     Resource dictionaries are loaded programmatically in ResourceDictionary.xaml.cs
+     to avoid InitializeComponent issues with partial class naming. -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" />
