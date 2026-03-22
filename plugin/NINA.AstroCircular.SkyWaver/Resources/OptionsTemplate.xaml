@@ -60,19 +60,19 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Focal L. mm" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Settings.FocalLengthMm, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Settings.FocalLengthMm, StringFormat={}{0:F1}, UpdateSourceTrigger=LostFocus}" Margin="2,1" />
                     <TextBlock Grid.Row="0" Grid.Column="2" Text="Aperture mm" VerticalAlignment="Center" Margin="6,0,0,0" />
-                    <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding Settings.ApertureMm, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
+                    <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding Settings.ApertureMm, StringFormat={}{0:F1}, UpdateSourceTrigger=LostFocus}" Margin="2,1" />
                     <TextBlock Grid.Row="0" Grid.Column="4" Text="Pixel Size um" VerticalAlignment="Center" Margin="6,0,0,0" />
-                    <TextBox Grid.Row="0" Grid.Column="5" Text="{Binding Settings.PixelSizeUm, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
+                    <TextBox Grid.Row="0" Grid.Column="5" Text="{Binding Settings.PixelSizeUm, StringFormat={}{0:F2}, UpdateSourceTrigger=LostFocus}" Margin="2,1" />
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Sensor W mm" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.SensorWidthMm, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.SensorWidthMm, StringFormat={}{0:F1}, UpdateSourceTrigger=LostFocus}" Margin="2,1" />
                     <TextBlock Grid.Row="1" Grid.Column="2" Text="Sensor H mm" VerticalAlignment="Center" Margin="6,0,0,0" />
-                    <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding Settings.SensorHeightMm, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
+                    <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding Settings.SensorHeightMm, StringFormat={}{0:F1}, UpdateSourceTrigger=LostFocus}" Margin="2,1" />
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Latitude" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Settings.ObserverLatitude, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Settings.ObserverLatitude, StringFormat={}{0:F2}, UpdateSourceTrigger=LostFocus}" Margin="2,1" />
                     <TextBlock Grid.Row="2" Grid.Column="2" Text="Longitude" VerticalAlignment="Center" Margin="6,0,0,0" />
-                    <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding Settings.ObserverLongitude, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
+                    <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding Settings.ObserverLongitude, StringFormat={}{0:F2}, UpdateSourceTrigger=LostFocus}" Margin="2,1" />
                 </Grid>
             </GroupBox>
 
