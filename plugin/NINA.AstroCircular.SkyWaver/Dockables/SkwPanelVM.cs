@@ -65,7 +65,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             this.domeMediator = domeMediator;
             this.domeFollower = domeFollower;
 
-            Title = "SKW Collimation";
+            Title = "SkyWave Collimator Helper";
 
             // Icon
             try {
