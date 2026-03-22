@@ -26,14 +26,12 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
 
     [Export(typeof(NINA.Equipment.Interfaces.ViewModel.IDockableVM))]
     public class SkwPanelVM : DockableVM {
-        private readonly IProfileService profileService;
         private readonly ITelescopeMediator telescopeMediator;
         private readonly ICameraMediator cameraMediator;
         private readonly IFocuserMediator focuserMediator;
         private readonly IFilterWheelMediator filterWheelMediator;
         private readonly IImagingMediator imagingMediator;
         private readonly IImageDataFactory imageDataFactory;
-        private readonly IApplicationStatusMediator statusMediator;
 
         private CancellationTokenSource runCts;
 
@@ -45,17 +43,14 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             IFocuserMediator focuserMediator,
             IFilterWheelMediator filterWheelMediator,
             IImagingMediator imagingMediator,
-            IImageDataFactory imageDataFactory,
-            IApplicationStatusMediator statusMediator
+            IImageDataFactory imageDataFactory
         ) : base(profileService) {
-            this.profileService = profileService;
             this.telescopeMediator = telescopeMediator;
             this.cameraMediator = cameraMediator;
             this.focuserMediator = focuserMediator;
             this.filterWheelMediator = filterWheelMediator;
             this.imagingMediator = imagingMediator;
             this.imageDataFactory = imageDataFactory;
-            this.statusMediator = statusMediator;
 
             Title = "SKW Collimation";
 
