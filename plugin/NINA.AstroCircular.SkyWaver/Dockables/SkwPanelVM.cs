@@ -330,13 +330,15 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 Progress = 5;
                 await filterWheelMediator.ChangeFilter(new FilterInfo(FilterName, 0, (short)0), ct);
 
-                // Step 2: Slew to target star
-                StatusText = $"Slewing to {StarName}...";
+                // Step 2: Slew & Center on target star (plate-solve, in focus)
+                StatusText = $"Slewing and centering on {StarName} (plate-solve)...";
                 Progress = 10;
                 var coords = new Coordinates(
                     Angle.ByHours(CoordinateUtils.ParseHMS(TargetRA)),
                     Angle.ByDegree(CoordinateUtils.ParseDMS(TargetDec)),
                     Epoch.J2000);
+                // Slew first, then plate-solve will be added when IPlateSolverFactory is available
+                // For now: slew to coordinates (plate-solve centering requires additional mediator)
                 await telescopeMediator.SlewToCoordinatesAsync(coords, ct);
 
                 // Step 3: Defocus

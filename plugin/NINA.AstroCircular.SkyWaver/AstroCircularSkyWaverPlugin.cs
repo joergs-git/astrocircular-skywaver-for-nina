@@ -1,4 +1,5 @@
 using NINA.AstroCircular.SkyWaver.Models;
+using NINA.Core.Utility;
 using NINA.Plugin;
 using NINA.Plugin.Interfaces;
 using NINA.Profile.Interfaces;
@@ -6,6 +7,7 @@ using System;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 
 namespace NINA.AstroCircular.SkyWaver {
 
@@ -14,41 +16,37 @@ namespace NINA.AstroCircular.SkyWaver {
         private readonly IProfileService profileService;
 
         public SkwSettings Settings { get; }
+        public ICommand BrowseFolderCommand { get; }
 
         [ImportingConstructor]
         public AstroCircularSkyWaverPlugin(IProfileService profileService) {
             this.profileService = profileService;
             Settings = new SkwSettings();
+            BrowseFolderCommand = new RelayCommand((o) => BrowseFolder());
 
-            // Auto-populate equipment values from NINA profile
-            try { LoadFromProfile(); } catch { /* non-critical */ }
+            try { LoadFromProfile(); } catch { }
+        }
+
+        private void BrowseFolder() {
+            using (var dialog = new System.Windows.Forms.FolderBrowserDialog()) {
+                dialog.Description = "Select SkyWave watch folder";
+                if (!string.IsNullOrEmpty(Settings.SkyWaveOutputDirectory)) {
+                    dialog.SelectedPath = Settings.SkyWaveOutputDirectory;
+                }
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+                    Settings.SkyWaveOutputDirectory = dialog.SelectedPath;
+                }
+            }
         }
 
         private void LoadFromProfile() {
-            var profile = profileService?.ActiveProfile;
-            if (profile == null) return;
-
-            // Telescope
-            try {
-                double fl = profile.TelescopeSettings.FocalLength;
-                double fr = profile.TelescopeSettings.FocalRatio;
-                if (fl > 0) Settings.FocalLengthMm = fl;
-                if (fr > 0 && fl > 0) Settings.ApertureMm = fl / fr;
-            } catch { }
-
-            // Camera pixel size
-            try {
-                double px = profile.CameraSettings.PixelSize;
-                if (px > 0) Settings.PixelSizeUm = px;
-            } catch { }
-
-            // Location
-            try {
-                double lat = profile.AstrometrySettings.Latitude;
-                double lon = profile.AstrometrySettings.Longitude;
-                if (lat != 0) Settings.ObserverLatitude = lat;
-                if (lon != 0) Settings.ObserverLongitude = lon;
-            } catch { }
+            var p = profileService?.ActiveProfile;
+            if (p == null) return;
+            try { if (p.TelescopeSettings.FocalLength > 0) Settings.FocalLengthMm = p.TelescopeSettings.FocalLength; } catch { }
+            try { if (p.TelescopeSettings.FocalRatio > 0) Settings.ApertureMm = p.TelescopeSettings.FocalLength / p.TelescopeSettings.FocalRatio; } catch { }
+            try { if (p.CameraSettings.PixelSize > 0) Settings.PixelSizeUm = p.CameraSettings.PixelSize; } catch { }
+            try { if (p.AstrometrySettings.Latitude != 0) Settings.ObserverLatitude = p.AstrometrySettings.Latitude; } catch { }
+            try { if (p.AstrometrySettings.Longitude != 0) Settings.ObserverLongitude = p.AstrometrySettings.Longitude; } catch { }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

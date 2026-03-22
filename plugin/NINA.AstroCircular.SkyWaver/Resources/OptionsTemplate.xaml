@@ -5,95 +5,46 @@
     <DataTemplate x:Key="AstroCircular SkyWaver_Options">
         <StackPanel Orientation="Vertical" MaxWidth="640" Margin="5">
 
-            <!-- SkyWave Output — the main thing to configure -->
-            <GroupBox Header="SkyWave Output Folder" Margin="0,0,0,4" BorderBrush="#3a5" BorderThickness="1.5">
+            <!-- SkyWave Output Folder with browse button -->
+            <GroupBox Header="SkyWave Output Folder" Margin="0,0,0,6" BorderBrush="#3a5" BorderThickness="1.5">
                 <StackPanel Margin="6,3">
                     <TextBlock Text="Folder that SkyWave watches for new FITS files." Foreground="#999" FontSize="10" Margin="0,0,0,2" />
-                    <TextBox Text="{Binding Settings.SkyWaveOutputDirectory, UpdateSourceTrigger=PropertyChanged}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Text="{Binding Settings.SkyWaveOutputDirectory, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button Grid.Column="1" Content=" Browse... " Margin="4,0,0,0" Padding="8,2"
+                                Command="{Binding BrowseFolderCommand}" />
+                    </Grid>
                 </StackPanel>
             </GroupBox>
 
-            <!-- Defocus + Imaging on fewer rows -->
-            <GroupBox Header="Defocus and Imaging" Margin="0,0,0,4">
-                <Grid Margin="6,2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="90" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="70" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="90" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Defocus Steps" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Settings.DefaultDefocusSteps, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Direction" VerticalAlignment="Center" Margin="6,0,0,0" />
-                    <ComboBox Grid.Row="0" Grid.Column="3" SelectedValue="{Binding Settings.DefaultDefocusDirection}" Margin="2,1">
-                        <ComboBoxItem Content="Extra-focal (+)" Tag="1" />
-                        <ComboBoxItem Content="Intra-focal (-)" Tag="-1" />
-                    </ComboBox>
-                    <TextBlock Grid.Row="0" Grid.Column="4" Text="Exposure (s)" VerticalAlignment="Center" Margin="6,0,0,0" />
-                    <TextBox Grid.Row="0" Grid.Column="5" Text="{Binding Settings.DefaultExposureSeconds, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Filter" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.DefaultFilterName, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                    <TextBlock Grid.Row="1" Grid.Column="2" Text="Gain" VerticalAlignment="Center" Margin="6,0,0,0" />
-                    <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding Settings.DefaultGain, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                    <TextBlock Grid.Row="1" Grid.Column="4" Text="Offset" VerticalAlignment="Center" Margin="6,0,0,0" />
-                    <TextBox Grid.Row="1" Grid.Column="5" Text="{Binding Settings.DefaultOffset, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Binning" VerticalAlignment="Center" />
-                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Settings.DefaultBinning, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                </Grid>
-            </GroupBox>
-
-            <!-- Pattern -->
-            <GroupBox Header="Circular Pattern" Margin="0,0,0,4">
+            <!-- Post-Capture Integration -->
+            <GroupBox Header="Post-Capture Integration" Margin="0,0,0,4">
                 <StackPanel Margin="6,2">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="90" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="90" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="90" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Positions" VerticalAlignment="Center" />
-                        <TextBox Grid.Column="1" Text="{Binding Settings.DefaultRingPositions, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                        <TextBlock Grid.Column="2" Text="Radius %FOV" VerticalAlignment="Center" Margin="6,0,0,0" />
-                        <TextBox Grid.Column="3" Text="{Binding Settings.DefaultRadiusPercent, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                        <TextBlock Grid.Column="4" Text="Settle (s)" VerticalAlignment="Center" Margin="6,0,0,0" />
-                        <TextBox Grid.Column="5" Text="{Binding Settings.DefaultSettleSeconds, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                    </Grid>
-                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                        <CheckBox Content="Include center position" IsChecked="{Binding Settings.IncludeCenter}"
-                                  ToolTip="Also capture at the center star (recommended for SkyWave field analysis)" Margin="0,0,16,0" />
-                        <CheckBox Content="Circular pattern (vs elliptical)" IsChecked="{Binding Settings.UseCircularPattern}"
-                                  ToolTip="Circle inscribed in FOV. Unchecked = follows sensor aspect ratio." />
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <CheckBox IsChecked="{Binding Settings.CropToCircle}" VerticalAlignment="Center" />
+                        <TextBlock Text="Crop to inscribed circle — removes corners outside ring pattern" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <CheckBox IsChecked="{Binding Settings.BinToHalf}" VerticalAlignment="Center" />
+                        <TextBlock Text="Bin 2x after integration — halves resolution for SkyWave" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <CheckBox IsChecked="{Binding Settings.AutoCleanSubFrames}" VerticalAlignment="Center" />
+                        <TextBlock Text="Auto-delete sub-frames — keeps only the integrated FITS" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <CheckBox IsChecked="{Binding Settings.IncludeCenter}" VerticalAlignment="Center" />
+                        <TextBlock Text="Include center position — extra frame at star center" Margin="6,0,0,0" VerticalAlignment="Center" />
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
 
-            <!-- Integration -->
-            <GroupBox Header="Post-Capture Integration" Margin="0,0,0,4">
-                <StackPanel Margin="6,2">
-                    <CheckBox Content="Crop to inscribed circle — removes black corners outside ring pattern" IsChecked="{Binding Settings.CropToCircle}" Margin="0,1" />
-                    <CheckBox Content="Bin 2x after integration — halves resolution, matches SkyWave input" IsChecked="{Binding Settings.BinToHalf}" Margin="0,1" />
-                    <CheckBox Content="Auto-delete sub-frames — keeps only integrated FITS" IsChecked="{Binding Settings.AutoCleanSubFrames}" Margin="0,1" />
-                </StackPanel>
-            </GroupBox>
-
-            <!-- Telescope + Sensor overrides (auto-read from NINA) -->
-            <GroupBox Margin="0,0,0,4">
-                <GroupBox.Header>
-                    <TextBlock Text="Telescope and Sensor (from NINA equipment profile — override if needed)" />
-                </GroupBox.Header>
+            <!-- Equipment (from NINA profile) -->
+            <GroupBox Header="Equipment (from NINA profile — override if needed)" Margin="0,0,0,4">
                 <Grid Margin="6,2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="90" />
@@ -108,19 +59,16 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Focal L. mm" VerticalAlignment="Center" />
                     <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Settings.FocalLengthMm, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
                     <TextBlock Grid.Row="0" Grid.Column="2" Text="Aperture mm" VerticalAlignment="Center" Margin="6,0,0,0" />
                     <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding Settings.ApertureMm, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
                     <TextBlock Grid.Row="0" Grid.Column="4" Text="Pixel Size um" VerticalAlignment="Center" Margin="6,0,0,0" />
                     <TextBox Grid.Row="0" Grid.Column="5" Text="{Binding Settings.PixelSizeUm, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Sensor W mm" VerticalAlignment="Center" />
                     <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.SensorWidthMm, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
                     <TextBlock Grid.Row="1" Grid.Column="2" Text="Sensor H mm" VerticalAlignment="Center" Margin="6,0,0,0" />
                     <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding Settings.SensorHeightMm, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Latitude" VerticalAlignment="Center" />
                     <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Settings.ObserverLatitude, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
                     <TextBlock Grid.Row="2" Grid.Column="2" Text="Longitude" VerticalAlignment="Center" Margin="6,0,0,0" />
@@ -128,10 +76,8 @@
                 </Grid>
             </GroupBox>
 
-            <!-- Footer -->
             <TextBlock Margin="0,2,0,0" FontSize="10" Foreground="#888" TextWrapping="Wrap"
-                       Text="v0.1.0 by joergsflow | github.com/joergs-git/astrocircular-skywaver-for-nina | innovationsforesight.com/aitelescopecollimation" />
-
+                       Text="v0.2.0 by joergsflow | github.com/joergs-git/astrocircular-skywaver-for-nina | innovationsforesight.com/aitelescopecollimation" />
         </StackPanel>
     </DataTemplate>
 

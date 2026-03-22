@@ -4,140 +4,105 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <DataTemplate x:Key="NINA.AstroCircular.SkyWaver.Dockables.SkwPanelVM_Dockable">
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Margin="5">
+        <StackPanel Margin="5">
 
-                <!-- ═══ Star Selection ═══ -->
-                <Grid Margin="0,0,0,4">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Star:" VerticalAlignment="Center" Margin="0,0,4,0" FontWeight="Bold" />
-                    <ComboBox Grid.Column="1" ItemsSource="{Binding StarPresets}" SelectedItem="{Binding SelectedPreset}"
-                              DisplayMemberPath="Name" Margin="0,0,4,0" />
-                    <Button Grid.Column="2" Content="Find Best" Command="{Binding FindBestStarCommand}"
-                            Padding="8,2" />
-                </Grid>
+            <!-- Star Selection -->
+            <Grid Margin="0,0,0,3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Star:" VerticalAlignment="Center" Margin="0,0,4,0" FontWeight="Bold" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding StarPresets}" SelectedItem="{Binding SelectedPreset}"
+                          DisplayMemberPath="Name" Margin="0,0,4,0" />
+                <Button Grid.Column="2" Content="Find Best" Command="{Binding FindBestStarCommand}" Padding="8,2" />
+            </Grid>
 
-                <!-- RA / Dec -->
-                <Grid Margin="0,0,0,4">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="30" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="35" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="RA" VerticalAlignment="Center" />
-                    <TextBox Grid.Column="1" Text="{Binding TargetRA, UpdateSourceTrigger=PropertyChanged}" Margin="2,0" />
-                    <TextBlock Grid.Column="2" Text="Dec" VerticalAlignment="Center" Margin="6,0,0,0" />
-                    <TextBox Grid.Column="3" Text="{Binding TargetDec, UpdateSourceTrigger=PropertyChanged}" Margin="2,0" />
-                </Grid>
+            <!-- RA / Dec -->
+            <Grid Margin="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="28" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="32" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="RA" VerticalAlignment="Center" FontSize="11" />
+                <TextBox Grid.Column="1" Text="{Binding TargetRA, UpdateSourceTrigger=PropertyChanged}" Margin="2,0" FontSize="11" />
+                <TextBlock Grid.Column="2" Text="Dec" VerticalAlignment="Center" Margin="6,0,0,0" FontSize="11" />
+                <TextBox Grid.Column="3" Text="{Binding TargetDec, UpdateSourceTrigger=PropertyChanged}" Margin="2,0" FontSize="11" />
+            </Grid>
 
-                <!-- ═══ Parameters (compact grid) ═══ -->
-                <Grid Margin="0,0,0,4">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="70" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="55" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="55" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+            <!-- Parameters (compact 3-column grid) -->
+            <Grid Margin="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="58" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="42" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="46" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                    <!-- Row 0: Defocus -->
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Defocus" VerticalAlignment="Center" FontSize="11" />
-                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DefocusSteps, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Dir" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
-                    <ComboBox Grid.Row="0" Grid.Column="3" SelectedValue="{Binding DefocusDirection}" Margin="2,1" FontSize="11">
-                        <ComboBoxItem Content="Extra +" Tag="1" />
-                        <ComboBoxItem Content="Intra -" Tag="-1" />
-                    </ComboBox>
-                    <TextBlock Grid.Row="0" Grid.Column="4" Text="Exp s" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
-                    <TextBox Grid.Row="0" Grid.Column="5" Text="{Binding ExposureTime, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Defocus" VerticalAlignment="Center" FontSize="11" />
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DefocusSteps, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Dir" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
+                <ComboBox Grid.Row="0" Grid.Column="3" SelectedValue="{Binding DefocusDirection}" Margin="2,1" FontSize="11">
+                    <ComboBoxItem Content="Extra +" Tag="1" />
+                    <ComboBoxItem Content="Intra -" Tag="-1" />
+                </ComboBox>
+                <TextBlock Grid.Row="0" Grid.Column="4" Text="Exp s" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
+                <TextBox Grid.Row="0" Grid.Column="5" Text="{Binding ExposureTime, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
 
-                    <!-- Row 1: Filter / Gain / Offset -->
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Filter" VerticalAlignment="Center" FontSize="11" />
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding FilterName, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                    <TextBlock Grid.Row="1" Grid.Column="2" Text="Gain" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
-                    <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding Gain, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                    <TextBlock Grid.Row="1" Grid.Column="4" Text="Offset" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
-                    <TextBox Grid.Row="1" Grid.Column="5" Text="{Binding Offset, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Filter" VerticalAlignment="Center" FontSize="11" />
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding FilterName, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="Gain" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
+                <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding Gain, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
+                <TextBlock Grid.Row="1" Grid.Column="4" Text="Offset" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
+                <TextBox Grid.Row="1" Grid.Column="5" Text="{Binding Offset, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
 
-                    <!-- Row 2: Pattern -->
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Positions" VerticalAlignment="Center" FontSize="11" />
-                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding RingPositions, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                    <TextBlock Grid.Row="2" Grid.Column="2" Text="Rad %" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
-                    <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding RadiusPercent, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                    <TextBlock Grid.Row="2" Grid.Column="4" Text="Settle" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
-                    <TextBox Grid.Row="2" Grid.Column="5" Text="{Binding SettleSeconds, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Pos." VerticalAlignment="Center" FontSize="11" />
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding RingPositions, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="Rad%" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
+                <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding RadiusPercent, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
+                <TextBlock Grid.Row="2" Grid.Column="4" Text="Settle" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
+                <TextBox Grid.Row="2" Grid.Column="5" Text="{Binding SettleSeconds, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
+            </Grid>
 
-                    <!-- Row 3: Binning -->
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Binning" VerticalAlignment="Center" FontSize="11" />
-                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Binning, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" />
-                </Grid>
+            <!-- Run / Cancel -->
+            <Grid Margin="0,0,0,3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Run Collimation" Command="{Binding RunCommand}"
+                        Padding="8,6" FontWeight="Bold" FontSize="13"
+                        Background="#22a558" Foreground="White" BorderThickness="0">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                    <Setter Property="IsEnabled" Value="False" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Grid.Column="1" Content="Cancel" Command="{Binding CancelCommand}"
+                        Padding="8,6" Margin="4,0,0,0" FontSize="13"
+                        Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityCollapsedConverter}}" />
+            </Grid>
 
-                <!-- ═══ Toggles ═══ -->
-                <WrapPanel Margin="0,0,0,4">
-                    <CheckBox Content="Center" IsChecked="{Binding IncludeCenter}" Margin="0,0,10,0" FontSize="11"
-                              ToolTip="Include center position in capture" />
-                    <CheckBox Content="Crop" IsChecked="{Binding CropToCircle}" Margin="0,0,10,0" FontSize="11"
-                              ToolTip="Crop to inscribed circle after integration" />
-                    <CheckBox Content="Bin2x" IsChecked="{Binding BinToHalf}" Margin="0,0,10,0" FontSize="11"
-                              ToolTip="2x2 bin after integration" />
-                    <CheckBox Content="Cleanup" IsChecked="{Binding AutoCleanSubFrames}" FontSize="11"
-                              ToolTip="Delete sub-frames after integration" />
-                </WrapPanel>
+            <!-- Progress -->
+            <ProgressBar Value="{Binding Progress}" Minimum="0" Maximum="100" Height="4" Margin="0,0,0,2" />
+            <TextBlock Text="{Binding StatusText}" FontSize="10" Foreground="#999" TextWrapping="Wrap" />
 
-                <!-- ═══ SkyWave Output Folder ═══ -->
-                <Grid Margin="0,0,0,6">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" Text="{Binding SkyWaveOutputDirectory, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="SkyWave watch folder for integrated FITS output" />
-                    <Button Grid.Column="1" Content=" ... " Command="{Binding BrowseFolderCommand}"
-                            Padding="6,1" Margin="2,0,0,0" ToolTip="Browse for SkyWave output folder" />
-                </Grid>
-
-                <!-- ═══ Run / Cancel ═══ -->
-                <Grid Margin="0,0,0,4">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="Run Collimation" Command="{Binding RunCommand}"
-                            Padding="8,6" FontWeight="Bold" FontSize="13"
-                            Background="#22a558" Foreground="White" BorderThickness="0">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
-                                        <Setter Property="IsEnabled" Value="False" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-                    <Button Grid.Column="1" Content="Cancel" Command="{Binding CancelCommand}"
-                            Padding="8,6" Margin="4,0,0,0" FontSize="13"
-                            Visibility="{Binding IsRunning, Converter={StaticResource BooleanToVisibilityCollapsedConverter}}" />
-                </Grid>
-
-                <!-- ═══ Progress ═══ -->
-                <ProgressBar Value="{Binding Progress}" Minimum="0" Maximum="100" Height="4" Margin="0,0,0,2" />
-                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="#999" TextWrapping="Wrap" />
-
-            </StackPanel>
-        </ScrollViewer>
+        </StackPanel>
     </DataTemplate>
 
 </ResourceDictionary>
