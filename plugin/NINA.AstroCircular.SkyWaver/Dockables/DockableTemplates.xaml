@@ -74,6 +74,30 @@
                 <TextBox Grid.Row="2" Grid.Column="5" Text="{Binding SettleSeconds, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
             </Grid>
 
+            <!-- Toggles -->
+            <WrapPanel Margin="0,0,0,4">
+                <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
+                    <CheckBox IsChecked="{Binding CropToCircle}" VerticalAlignment="Center" />
+                    <TextBlock Text="Crop" Margin="4,0,0,0" FontSize="10" VerticalAlignment="Center"
+                               ToolTip="Crop to square inscribed in the ring pattern" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
+                    <CheckBox IsChecked="{Binding BinToHalf}" VerticalAlignment="Center" />
+                    <TextBlock Text="Bin2x" Margin="4,0,0,0" FontSize="10" VerticalAlignment="Center"
+                               ToolTip="2x2 downsample after integration" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
+                    <CheckBox IsChecked="{Binding IncludeCenter}" VerticalAlignment="Center" />
+                    <TextBlock Text="Center" Margin="4,0,0,0" FontSize="10" VerticalAlignment="Center"
+                               ToolTip="Include center star position" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox IsChecked="{Binding AutoCleanSubFrames}" VerticalAlignment="Center" />
+                    <TextBlock Text="Auto-delete subs" Margin="4,0,0,0" FontSize="10" VerticalAlignment="Center"
+                               ToolTip="Delete individual frames after integration" />
+                </StackPanel>
+            </WrapPanel>
+
             <!-- SkyWave Output Folder -->
             <Grid Margin="0,0,0,4">
                 <Grid.ColumnDefinitions>

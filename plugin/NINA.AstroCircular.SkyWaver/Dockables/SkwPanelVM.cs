@@ -230,7 +230,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
 
         // ── Integration ──
 
-        private bool cropToCircle = true;
+        private bool cropToCircle = false;
         public bool CropToCircle {
             get => cropToCircle;
             set { cropToCircle = value; RaisePropertyChanged(); SaveSettings(); }
@@ -242,7 +242,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             set { binToHalf = value; RaisePropertyChanged(); SaveSettings(); }
         }
 
-        private bool autoCleanSubFrames = true;
+        private bool autoCleanSubFrames = false;
         public bool AutoCleanSubFrames {
             get => autoCleanSubFrames;
             set { autoCleanSubFrames = value; RaisePropertyChanged(); SaveSettings(); }
@@ -789,7 +789,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 Logger.Info($"SKW: Averaged {frameCount} frames ({width}x{height})");
 
                 if (CropToCircle) {
-                    (averaged, width, height) = FitsAverager.CropToCircle(averaged, width, height);
+                    (averaged, width, height) = FitsAverager.CropToSquare(averaged, width, height);
                 }
                 if (BinToHalf) {
                     (averaged, width, height) = FitsAverager.Bin2x2(averaged, width, height);

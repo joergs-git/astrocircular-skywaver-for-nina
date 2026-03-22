@@ -124,7 +124,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
 
             // Step 2: Optional crop to inscribed circle
             if (CropToCircle) {
-                (averaged, width, height) = FitsAverager.CropToCircle(averaged, width, height);
+                (averaged, width, height) = FitsAverager.CropToSquare(averaged, width, height);
                 progress?.Report(new ApplicationStatus {
                     Status = $"SKW: Cropped to circle ({width}x{height})"
                 });

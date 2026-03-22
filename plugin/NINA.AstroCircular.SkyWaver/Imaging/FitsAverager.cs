@@ -79,39 +79,23 @@ namespace NINA.AstroCircular.SkyWaver.Imaging {
         }
 
         /// <summary>
-        /// Crop the image data to a square inscribed in the largest circle that fits.
-        /// Pixels outside the circle radius are zeroed.
+        /// Crop the image to a centered square (shorter dimension).
+        /// Rectangular crop — no circular masking.
         /// </summary>
-        public static (double[] data, int newWidth, int newHeight) CropToCircle(
+        public static (double[] data, int newWidth, int newHeight) CropToSquare(
             double[] data, int width, int height) {
 
-            // Inscribed circle: radius = half of the shorter dimension
-            int minDim = Math.Min(width, height);
-            double radius = minDim / 2.0;
-            double cx = width / 2.0;
-            double cy = height / 2.0;
-
-            // Crop to square around center
-            int cropX = (int)Math.Round(cx - radius);
-            int cropY = (int)Math.Round(cy - radius);
-            int cropSize = (int)Math.Round(radius * 2);
+            int cropSize = Math.Min(width, height);
+            int cropX = (width - cropSize) / 2;
+            int cropY = (height - cropSize) / 2;
 
             double[] cropped = new double[cropSize * cropSize];
-            double centerX = cropSize / 2.0;
-            double centerY = cropSize / 2.0;
-            double r2 = radius * radius;
 
             for (int y = 0; y < cropSize; y++) {
                 for (int x = 0; x < cropSize; x++) {
                     int srcX = cropX + x;
                     int srcY = cropY + y;
-
-                    // Zero pixels outside the circle
-                    double dx = x - centerX;
-                    double dy = y - centerY;
-                    if (dx * dx + dy * dy > r2) {
-                        cropped[y * cropSize + x] = 0;
-                    } else if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height) {
+                    if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height) {
                         cropped[y * cropSize + x] = data[srcY * width + srcX];
                     }
                 }
