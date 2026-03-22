@@ -13,6 +13,7 @@ using NINA.Profile.Interfaces;
 using NINA.WPF.Base.ViewModel;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
@@ -75,6 +76,9 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
 
             // Try to populate from NINA profile
             LoadFromProfile();
+
+            // Build initial map
+            try { BuildMapPositions(); } catch { }
         }
 
         public override bool IsTool => true;
@@ -226,6 +230,85 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             set { skyWaveOutputDirectory = value; RaisePropertyChanged(); SaveSettings(); }
         }
 
+        // ── Sensor Map ──
+
+        public ObservableCollection<MapPosition> MapPositions { get; } = new ObservableCollection<MapPosition>();
+
+        private string progressText = "";
+        public string ProgressText {
+            get => progressText;
+            set { progressText = value; RaisePropertyChanged(); }
+        }
+
+        // Map canvas dimensions (constant, aspect ratio adjusted at render time)
+        public double MapWidth => 200;
+        public double MapHeight => 140;
+
+        private double ringCanvasRadius;
+        public double RingCanvasRadius {
+            get => ringCanvasRadius;
+            set { ringCanvasRadius = value; RaisePropertyChanged(); }
+        }
+        public double RingCanvasCenterX => MapWidth / 2;
+        public double RingCanvasCenterY => MapHeight / 2;
+
+        /// <summary>
+        /// Build the map positions for visualization based on current settings.
+        /// Called when settings change or before a run starts.
+        /// </summary>
+        private void BuildMapPositions() {
+            MapPositions.Clear();
+
+            double sensorW = 36.0, sensorH = 24.0;
+            try {
+                sensorW = profileService?.ActiveProfile?.CameraSettings?.PixelSize > 0
+                    ? cameraMediator.GetInfo().XSize * profileService.ActiveProfile.CameraSettings.PixelSize / 1000.0 : 36.0;
+                sensorH = profileService?.ActiveProfile?.CameraSettings?.PixelSize > 0
+                    ? cameraMediator.GetInfo().YSize * profileService.ActiveProfile.CameraSettings.PixelSize / 1000.0 : 24.0;
+            } catch { }
+
+            double fl = 1946;
+            try { fl = profileService?.ActiveProfile?.TelescopeSettings?.FocalLength ?? 1946; if (fl <= 0) fl = 1946; } catch { }
+
+            var (fovW, fovH) = CircularPatternCalculator.ComputeFOV(sensorW, sensorH, fl);
+            double centerRA = CoordinateUtils.ParseHMS(TargetRA);
+            double centerDec = CoordinateUtils.ParseDMS(TargetDec);
+
+            var positions = CircularPatternCalculator.Calculate(
+                centerRA, centerDec, fovW, fovH,
+                RingPositions, RadiusPercent, true, IncludeCenter);
+
+            // Map sky positions to canvas coordinates
+            double pad = 14;
+            double drawW = MapWidth - 2 * pad;
+            double drawH = MapHeight - 2 * pad;
+            double cx = MapWidth / 2;
+            double cy = MapHeight / 2;
+            double cosDec = Math.Cos(centerDec * Math.PI / 180.0);
+
+            // Ring radius on canvas
+            double minFov = Math.Min(fovW, fovH);
+            double ringDeg = (RadiusPercent / 100.0) * (minFov / 2.0);
+            RingCanvasRadius = (ringDeg / fovW) * drawW;
+
+            foreach (var pos in positions) {
+                double dRaDeg = (pos.RAHours - centerRA) * 15.0 * cosDec;
+                double dDecDeg = pos.DecDegrees - centerDec;
+                double canvasX = cx + (dRaDeg / fovW) * drawW;
+                double canvasY = cy - (dDecDeg / fovH) * drawH;
+
+                MapPositions.Add(new MapPosition {
+                    Label = pos.Label,
+                    CanvasX = canvasX,
+                    CanvasY = canvasY,
+                    IsCenter = pos.Label == "Center",
+                    State = PositionState.Pending
+                });
+            }
+
+            ProgressText = $"0 / {positions.Count} positions";
+        }
+
         // ── Star Presets (for ComboBox) ──
 
         public List<StarPreset> StarPresets => StarCatalog.Presets;
@@ -358,12 +441,21 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 var capturedFiles = new List<string>();
                 int total = positions.Count;
 
+                // Build the visual map
+                BuildMapPositions();
+
                 for (int i = 0; i < total; i++) {
                     ct.ThrowIfCancellationRequested();
                     var pos = positions[i];
                     int pctBase = 20;
                     int pctRange = 60;
                     Progress = pctBase + (i * pctRange / total);
+
+                    // Update map: mark current position active
+                    if (i < MapPositions.Count) {
+                        MapPositions[i].State = PositionState.Active;
+                    }
+                    ProgressText = $"{i} / {total} positions";
 
                     // Blind slew (no plate-solve — telescope is defocused)
                     StatusText = $"Slewing to {pos.Label} ({i + 1}/{total})...";
@@ -375,6 +467,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                         await telescopeMediator.SlewToCoordinatesAsync(posCoords, ct);
                     } catch {
                         StatusText = $"Slew to {pos.Label} failed, skipping...";
+                        if (i < MapPositions.Count) MapPositions[i].State = PositionState.Failed;
                         continue;
                     }
 
@@ -409,11 +502,13 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                                 string savedPath = await imageData.SaveToDisk(fileSaveInfo, ct);
                                 if (!string.IsNullOrEmpty(savedPath)) {
                                     capturedFiles.Add(savedPath);
+                                    if (i < MapPositions.Count) MapPositions[i].State = PositionState.Done;
                                 }
                             }
                         }
                     } catch (Exception ex) {
                         Logger.Warning($"SKW: Capture at {pos.Label} failed: {ex.Message}");
+                        if (i < MapPositions.Count) MapPositions[i].State = PositionState.Failed;
                     }
                 }
 
@@ -465,6 +560,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 }
 
                 Progress = 100;
+                ProgressText = $"{capturedFiles.Count} / {total} positions done";
                 StatusText = $"Done! {capturedFiles.Count} frames integrated. Output: {outputFile}";
                 return true;
 
