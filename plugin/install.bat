@@ -1,6 +1,5 @@
 @echo off
-setlocal enabledelayedexpansion
-title AstroCircular SkyWaver — NINA Plugin Installer
+title AstroCircular SkyWaver Installer
 echo.
 echo  ============================================
 echo   AstroCircular SkyWaver for N.I.N.A.
@@ -9,89 +8,68 @@ echo   by joergsflow
 echo  ============================================
 echo.
 
-:: ── Find the DLL ──
-set "DLL_PATH=%~dp0AstroCircular.SkyWaver\NINA.AstroCircular.SkyWaver.dll"
-if not exist "!DLL_PATH!" set "DLL_PATH=%~dp0NINA.AstroCircular.SkyWaver.dll"
-if not exist "!DLL_PATH!" (
-    echo  [ERROR] Cannot find NINA.AstroCircular.SkyWaver.dll
-    echo  Make sure install.bat is next to the DLL or the
-    echo  AstroCircular.SkyWaver subfolder.
-    echo.
-    pause
-    exit /b 1
-)
-echo  Found: !DLL_PATH!
-echo.
+set "SCRIPT_DIR=%~dp0"
+set "DLL="
 
-:: ── Detect NINA plugin directory ──
-set "NINA_DIR="
+:: Find the DLL
+if exist "%SCRIPT_DIR%AstroCircular.SkyWaver\NINA.AstroCircular.SkyWaver.dll" (
+    set "DLL=%SCRIPT_DIR%AstroCircular.SkyWaver\NINA.AstroCircular.SkyWaver.dll"
+    goto :found_dll
+)
+if exist "%SCRIPT_DIR%NINA.AstroCircular.SkyWaver.dll" (
+    set "DLL=%SCRIPT_DIR%NINA.AstroCircular.SkyWaver.dll"
+    goto :found_dll
+)
+
+echo  [ERROR] Cannot find NINA.AstroCircular.SkyWaver.dll
+echo.
+pause
+goto :eof
+
+:found_dll
+echo  DLL: %DLL%
+
+:: Find NINA Plugins folder
+set "TARGET="
 if exist "%localappdata%\NINA\3\Plugins" (
-    set "NINA_DIR=%localappdata%\NINA\3\Plugins\AstroCircular.SkyWaver"
-) else if exist "%localappdata%\NINA\Plugins" (
-    set "NINA_DIR=%localappdata%\NINA\Plugins\AstroCircular.SkyWaver"
+    set "TARGET=%localappdata%\NINA\3\Plugins\AstroCircular.SkyWaver"
+    goto :found_nina
+)
+if exist "%localappdata%\NINA\Plugins" (
+    set "TARGET=%localappdata%\NINA\Plugins\AstroCircular.SkyWaver"
+    goto :found_nina
 )
 
-if not defined NINA_DIR (
-    echo  Could not auto-detect NINA Plugins folder.
-    echo.
-    echo  Enter the full path to your NINA Plugins folder
-    echo  (e.g. C:\Users\YourName\AppData\Local\NINA\3\Plugins):
-    echo.
-    set /p "PLUGINS_DIR=  Path: "
-    set "NINA_DIR=!PLUGINS_DIR!\AstroCircular.SkyWaver"
-)
+echo.
+echo  Could not find NINA Plugins folder automatically.
+echo  Enter path to your NINA Plugins folder:
+echo.
+set /p "TARGET_BASE=  Path: "
+set "TARGET=%TARGET_BASE%\AstroCircular.SkyWaver"
 
-echo  Target: !NINA_DIR!
-
-:: ── Check for existing installation ──
-if exist "!NINA_DIR!\NINA.AstroCircular.SkyWaver.dll" (
-    echo.
-    echo  Previous installation found — will be updated.
-)
+:found_nina
+echo  Target: %TARGET%
 echo.
 
-:: ── Create directory if needed ──
-if not exist "!NINA_DIR!" (
-    mkdir "!NINA_DIR!" 2>NUL
-    if errorlevel 1 (
-        echo  [ERROR] Cannot create: !NINA_DIR!
-        echo  Try running as Administrator.
-        echo.
-        pause
-        exit /b 1
-    )
+if exist "%TARGET%\NINA.AstroCircular.SkyWaver.dll" (
+    echo  Existing installation found, updating...
+    echo.
 )
 
-:: ── Copy DLL (overwrite existing) ──
-echo  Copying plugin DLL...
-copy /Y "!DLL_PATH!" "!NINA_DIR!\" >NUL 2>&1
+if not exist "%TARGET%" mkdir "%TARGET%"
+
+copy /Y "%DLL%" "%TARGET%\" >NUL 2>&1
 if errorlevel 1 (
-    echo.
-    echo  [ERROR] Failed to copy DLL.
-    echo    FROM: !DLL_PATH!
-    echo    TO:   !NINA_DIR!\
-    echo.
-    echo  If N.I.N.A. is running, close it first and retry.
+    echo  [ERROR] Copy failed. Close N.I.N.A. first and retry.
     echo.
     pause
-    exit /b 1
+    goto :eof
 )
 
+echo  [OK] Installed to %TARGET%
 echo.
-echo  ============================================
-echo   [OK] Installed successfully!
-echo  ============================================
-echo.
-echo  Location: !NINA_DIR!
-echo.
-echo  Start N.I.N.A. and go to:
-echo    Options ^> Plugins     — to configure settings
-echo    Advanced Sequencer    — find "AstroCircular SKW"
-echo.
-echo  Available sequence instructions:
-echo    - SKW Collimation Run   (full one-click workflow)
-echo    - SKW Defocus
-echo    - SKW Circular Capture
-echo    - SKW Integrate Frames
+echo  Start N.I.N.A. and check:
+echo    Options  - Plugins - AstroCircular SkyWaver
+echo    Sequencer - AstroCircular SKW category
 echo.
 pause
