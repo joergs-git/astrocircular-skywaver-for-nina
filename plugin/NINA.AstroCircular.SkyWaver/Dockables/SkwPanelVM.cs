@@ -5,11 +5,14 @@ using NINA.AstroCircular.SkyWaver.Utility;
 using NINA.Core.Model;
 using NINA.Core.Model.Equipment;
 using NINA.Core.Utility;
+using NINA.Equipment.Interfaces;
 using NINA.Equipment.Interfaces.Mediator;
 using NINA.Equipment.Model;
 using NINA.Image.FileFormat;
 using NINA.Image.Interfaces;
+using NINA.PlateSolving;
 using NINA.Profile.Interfaces;
+using NINA.Sequencer.SequenceItem.Platesolving;
 using NINA.WPF.Base.ViewModel;
 using System;
 using System.Collections.Generic;
@@ -33,6 +36,9 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
         private readonly IFilterWheelMediator filterWheelMediator;
         private readonly IImagingMediator imagingMediator;
         private readonly IImageDataFactory imageDataFactory;
+        private readonly IGuiderMediator guiderMediator;
+        private readonly IDomeMediator domeMediator;
+        private readonly IDomeFollower domeFollower;
 
         private CancellationTokenSource runCts;
 
@@ -44,7 +50,10 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             IFocuserMediator focuserMediator,
             IFilterWheelMediator filterWheelMediator,
             IImagingMediator imagingMediator,
-            IImageDataFactory imageDataFactory
+            IImageDataFactory imageDataFactory,
+            IGuiderMediator guiderMediator,
+            IDomeMediator domeMediator,
+            IDomeFollower domeFollower
         ) : base(profileService) {
             this.telescopeMediator = telescopeMediator;
             this.cameraMediator = cameraMediator;
@@ -52,6 +61,9 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             this.filterWheelMediator = filterWheelMediator;
             this.imagingMediator = imagingMediator;
             this.imageDataFactory = imageDataFactory;
+            this.guiderMediator = guiderMediator;
+            this.domeMediator = domeMediator;
+            this.domeFollower = domeFollower;
 
             Title = "SKW Collimation";
 
@@ -240,9 +252,18 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             set { progressText = value; RaisePropertyChanged(); }
         }
 
-        // Map canvas dimensions
-        public double MapWidth => 280;
-        public double MapHeight => 200;
+        // Map canvas dimensions — dynamically sized
+        private double mapWidth = 280;
+        public double MapWidth {
+            get => mapWidth;
+            set { mapWidth = value; RaisePropertyChanged(); }
+        }
+
+        private double mapHeight = 200;
+        public double MapHeight {
+            get => mapHeight;
+            set { mapHeight = value; RaisePropertyChanged(); }
+        }
 
         private double ringCanvasRadius;
         public double RingCanvasRadius {
@@ -254,21 +275,34 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
 
         /// <summary>
         /// Build the map positions for visualization based on current settings.
-        /// Called when settings change or before a run starts.
+        /// The map frame represents the sensor — aspect ratio matches the real sensor.
         /// </summary>
         private void BuildMapPositions() {
             MapPositions.Clear();
 
             double sensorW = 36.0, sensorH = 24.0;
             try {
-                sensorW = profileService?.ActiveProfile?.CameraSettings?.PixelSize > 0
-                    ? cameraMediator.GetInfo().XSize * profileService.ActiveProfile.CameraSettings.PixelSize / 1000.0 : 36.0;
-                sensorH = profileService?.ActiveProfile?.CameraSettings?.PixelSize > 0
-                    ? cameraMediator.GetInfo().YSize * profileService.ActiveProfile.CameraSettings.PixelSize / 1000.0 : 24.0;
+                var px = profileService?.ActiveProfile?.CameraSettings?.PixelSize ?? 0;
+                if (px > 0) {
+                    var camInfo = cameraMediator.GetInfo();
+                    if (camInfo.XSize > 0) sensorW = camInfo.XSize * px / 1000.0;
+                    if (camInfo.YSize > 0) sensorH = camInfo.YSize * px / 1000.0;
+                }
             } catch { }
 
             double fl = 1946;
             try { fl = profileService?.ActiveProfile?.TelescopeSettings?.FocalLength ?? 1946; if (fl <= 0) fl = 1946; } catch { }
+
+            // Set map dimensions to match sensor aspect ratio (fit within 300px max)
+            double sensorAspect = sensorW / sensorH;
+            double maxW = 300;
+            if (sensorAspect >= 1) {
+                MapWidth = maxW;
+                MapHeight = maxW / sensorAspect;
+            } else {
+                MapHeight = maxW;
+                MapWidth = maxW * sensorAspect;
+            }
 
             var (fovW, fovH) = CircularPatternCalculator.ComputeFOV(sensorW, sensorH, fl);
             double centerRA = CoordinateUtils.ParseHMS(TargetRA);
@@ -278,22 +312,25 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 centerRA, centerDec, fovW, fovH,
                 RingPositions, RadiusPercent, true, IncludeCenter);
 
-            // Map sky positions to canvas coordinates
-            double pad = 14;
+            // Map sky positions to canvas coordinates — centered in the frame
+            double pad = 12;
             double drawW = MapWidth - 2 * pad;
             double drawH = MapHeight - 2 * pad;
-            double cx = MapWidth / 2;
-            double cy = MapHeight / 2;
+            double cx = MapWidth / 2.0;
+            double cy = MapHeight / 2.0;
             double cosDec = Math.Cos(centerDec * Math.PI / 180.0);
 
             // Ring radius on canvas
             double minFov = Math.Min(fovW, fovH);
             double ringDeg = (RadiusPercent / 100.0) * (minFov / 2.0);
-            RingCanvasRadius = (ringDeg / fovW) * drawW;
+            double minDraw = Math.Min(drawW, drawH);
+            RingCanvasRadius = (ringDeg / (minFov / 2.0)) * (minDraw / 2.0);
 
             foreach (var pos in positions) {
                 double dRaDeg = (pos.RAHours - centerRA) * 15.0 * cosDec;
                 double dDecDeg = pos.DecDegrees - centerDec;
+
+                // Scale relative to FOV, centered in canvas
                 double canvasX = cx + (dRaDeg / fovW) * drawW;
                 double canvasY = cy - (dDecDeg / fovH) * drawH;
 
@@ -474,15 +511,22 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 await filterWheelMediator.ChangeFilter(new FilterInfo(FilterName, 0, (short)0), ct);
 
                 // Step 2: Slew & Center on target star (plate-solve, in focus)
-                StatusText = $"Slewing and centering on {StarName} (plate-solve)...";
+                StatusText = $"Centering on {StarName} (slew + plate-solve)...";
                 Progress = 10;
                 var coords = new Coordinates(
                     Angle.ByHours(CoordinateUtils.ParseHMS(TargetRA)),
                     Angle.ByDegree(CoordinateUtils.ParseDMS(TargetDec)),
                     Epoch.J2000);
-                // Slew first, then plate-solve will be added when IPlateSolverFactory is available
-                // For now: slew to coordinates (plate-solve centering requires additional mediator)
-                await telescopeMediator.SlewToCoordinatesAsync(coords, ct);
+
+                // Use NINA's built-in Center instruction for plate-solve centering
+                var centerInstruction = new Center(
+                    profileService, telescopeMediator, imagingMediator, filterWheelMediator,
+                    guiderMediator, domeMediator, domeFollower,
+                    new PlateSolverFactoryProxy(), new NINA.Core.Utility.WindowService.WindowServiceFactory()
+                ) {
+                    Coordinates = new NINA.Astrometry.InputCoordinates(coords)
+                };
+                await centerInstruction.Execute(progressReporter, ct);
 
                 // Step 3: Defocus
                 StatusText = $"Defocusing {(relativeDefocus > 0 ? "+" : "")}{relativeDefocus} steps...";

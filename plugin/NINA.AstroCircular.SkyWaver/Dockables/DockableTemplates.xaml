@@ -109,11 +109,13 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Sensor Map -->
-                <Border Grid.Column="0" BorderBrush="#272d42" BorderThickness="1" CornerRadius="3"
-                        Background="#080a10" Margin="0,0,2,0" MinHeight="200">
+                <!-- Sensor Map — frame = sensor rectangle, aspect ratio matches real sensor -->
+                <Border Grid.Column="0" BorderBrush="#3a4060" BorderThickness="1.5"
+                        Background="#080a10" Margin="0,0,2,0"
+                        Width="{Binding MapWidth}" Height="{Binding MapHeight}"
+                        HorizontalAlignment="Center">
                     <Grid>
-                        <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                        <Canvas Width="{Binding MapWidth}" Height="{Binding MapHeight}"
                                 ClipToBounds="True">
                             <!-- Position dots via ItemsControl -->
                             <ItemsControl ItemsSource="{Binding MapPositions}">
