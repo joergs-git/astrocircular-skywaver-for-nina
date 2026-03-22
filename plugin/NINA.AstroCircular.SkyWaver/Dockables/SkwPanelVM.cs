@@ -121,13 +121,13 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
         private string targetRA = "14:25:11.8";
         public string TargetRA {
             get => targetRA;
-            set { targetRA = value; RaisePropertyChanged(); SaveSettings(); }
+            set { targetRA = value; RaisePropertyChanged(); SaveSettings(); RebuildMap(); }
         }
 
         private string targetDec = "51:51:02.7";
         public string TargetDec {
             get => targetDec;
-            set { targetDec = value; RaisePropertyChanged(); SaveSettings(); }
+            set { targetDec = value; RaisePropertyChanged(); SaveSettings(); RebuildMap(); }
         }
 
         // ── Defocus ──
@@ -181,13 +181,13 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
         private int ringPositions = 8;
         public int RingPositions {
             get => ringPositions;
-            set { ringPositions = value; RaisePropertyChanged(); SaveSettings(); }
+            set { ringPositions = value; RaisePropertyChanged(); SaveSettings(); RebuildMap(); }
         }
 
         private int radiusPercent = 80;
         public int RadiusPercent {
             get => radiusPercent;
-            set { radiusPercent = value; RaisePropertyChanged(); SaveSettings(); }
+            set { radiusPercent = value; RaisePropertyChanged(); SaveSettings(); RebuildMap(); }
         }
 
         private int settleSeconds = 3;
@@ -199,7 +199,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
         private bool includeCenter = true;
         public bool IncludeCenter {
             get => includeCenter;
-            set { includeCenter = value; RaisePropertyChanged(); SaveSettings(); }
+            set { includeCenter = value; RaisePropertyChanged(); SaveSettings(); RebuildMap(); }
         }
 
         // ── Integration ──
@@ -240,9 +240,9 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             set { progressText = value; RaisePropertyChanged(); }
         }
 
-        // Map canvas dimensions (constant, aspect ratio adjusted at render time)
-        public double MapWidth => 200;
-        public double MapHeight => 140;
+        // Map canvas dimensions
+        public double MapWidth => 280;
+        public double MapHeight => 200;
 
         private double ringCanvasRadius;
         public double RingCanvasRadius {
@@ -307,6 +307,66 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             }
 
             ProgressText = $"0 / {positions.Count} positions";
+        }
+
+        private void RebuildMap() {
+            if (!IsRunning) {
+                try { BuildMapPositions(); } catch { }
+            }
+        }
+
+        // ── Last Captured Image Preview ──
+
+        private System.Windows.Media.Imaging.BitmapSource lastCapturedImage;
+        public System.Windows.Media.Imaging.BitmapSource LastCapturedImage {
+            get => lastCapturedImage;
+            set { lastCapturedImage = value; RaisePropertyChanged(); }
+        }
+
+        /// <summary>
+        /// Create a quick thumbnail from image data for the preview panel.
+        /// </summary>
+        private void UpdatePreviewImage(NINA.Image.Interfaces.IImageData imageData) {
+            try {
+                if (imageData == null) return;
+                var pixels = imageData.Data.FlatArray;
+                int w = imageData.Properties.Width;
+                int h = imageData.Properties.Height;
+
+                // Downsample to thumbnail (max 200px wide)
+                int scale = Math.Max(1, w / 200);
+                int tw = w / scale;
+                int th = h / scale;
+
+                // Find min/max for auto-stretch
+                ushort min = ushort.MaxValue, max = 0;
+                for (int i = 0; i < pixels.Length; i += scale * 10) {
+                    if (pixels[i] < min) min = pixels[i];
+                    if (pixels[i] > max) max = pixels[i];
+                }
+                double range = Math.Max(1, max - min);
+
+                // Create 8-bit grayscale bitmap
+                byte[] bmpData = new byte[tw * th];
+                for (int y = 0; y < th; y++) {
+                    for (int x = 0; x < tw; x++) {
+                        int srcIdx = (y * scale) * w + (x * scale);
+                        if (srcIdx < pixels.Length) {
+                            bmpData[y * tw + x] = (byte)(255.0 * (pixels[srcIdx] - min) / range);
+                        }
+                    }
+                }
+
+                var bmp = System.Windows.Media.Imaging.BitmapSource.Create(
+                    tw, th, 96, 96,
+                    System.Windows.Media.PixelFormats.Gray8, null,
+                    bmpData, tw);
+                bmp.Freeze();
+
+                System.Windows.Application.Current?.Dispatcher?.Invoke(() => {
+                    LastCapturedImage = bmp;
+                });
+            } catch { }
         }
 
         // ── Star Presets (for ComboBox) ──
@@ -493,6 +553,8 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                         if (exposureData != null) {
                             var imageData = await exposureData.ToImageData(progressReporter, ct);
                             if (imageData != null) {
+                                // Update live preview
+                                UpdatePreviewImage(imageData);
                                 string posLabel = pos.Label.Replace(" ", "");
                                 var fileSaveInfo = new FileSaveInfo(profileService) {
                                     FilePath = tempDir,

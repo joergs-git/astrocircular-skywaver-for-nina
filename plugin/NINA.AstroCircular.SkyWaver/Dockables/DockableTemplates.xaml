@@ -102,63 +102,77 @@
             <ProgressBar Value="{Binding Progress}" Minimum="0" Maximum="100" Height="4" Margin="0,0,0,2" />
             <TextBlock Text="{Binding StatusText}" FontSize="10" Foreground="#999" TextWrapping="Wrap" />
 
-            <!-- Sensor Map -->
-            <Border BorderBrush="#272d42" BorderThickness="1" CornerRadius="3" Background="#080a10"
-                    Margin="0,4,0,0" Height="{Binding MapHeight}" HorizontalAlignment="Stretch">
-                <Grid>
-                    <Canvas Width="{Binding MapWidth}" Height="{Binding MapHeight}" HorizontalAlignment="Center">
-                        <!-- Sensor outline -->
-                        <Rectangle Canvas.Left="4" Canvas.Top="4"
-                                   Width="{Binding MapWidth}" Height="{Binding MapHeight}"
-                                   Stroke="#1a2040" StrokeThickness="0.5" Fill="Transparent" />
+            <!-- Sensor Map + Camera Preview side by side -->
+            <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-                        <!-- Ring orbit (dashed circle) -->
-                        <Ellipse Canvas.Left="{Binding RingCanvasCenterX}" Canvas.Top="{Binding RingCanvasCenterY}"
-                                 Width="1" Height="1" Stroke="#5b8def" StrokeThickness="0.5"
-                                 StrokeDashArray="2 3" Opacity="0.3" />
+                <!-- Sensor Map -->
+                <Border Grid.Column="0" BorderBrush="#272d42" BorderThickness="1" CornerRadius="3"
+                        Background="#080a10" Margin="0,0,2,0" MinHeight="200">
+                    <Grid>
+                        <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                ClipToBounds="True">
+                            <!-- Position dots via ItemsControl -->
+                            <ItemsControl ItemsSource="{Binding MapPositions}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Canvas />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style TargetType="ContentPresenter">
+                                        <Setter Property="Canvas.Left" Value="{Binding CanvasX}" />
+                                        <Setter Property="Canvas.Top" Value="{Binding CanvasY}" />
+                                    </Style>
+                                </ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="-7,-7,0,0">
+                                            <Ellipse Width="14" Height="14" StrokeThickness="1.5">
+                                                <Ellipse.Stroke>
+                                                    <SolidColorBrush Color="{Binding StrokeColor}" />
+                                                </Ellipse.Stroke>
+                                                <Ellipse.Fill>
+                                                    <SolidColorBrush Color="{Binding FillColor}" Opacity="0.15" />
+                                                </Ellipse.Fill>
+                                            </Ellipse>
+                                            <Ellipse Width="5" Height="5" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <Ellipse.Fill>
+                                                    <SolidColorBrush Color="{Binding FillColor}" />
+                                                </Ellipse.Fill>
+                                            </Ellipse>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Canvas>
 
-                        <!-- Position dots via ItemsControl -->
-                        <ItemsControl ItemsSource="{Binding MapPositions}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <Canvas />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemContainerStyle>
-                                <Style TargetType="ContentPresenter">
-                                    <Setter Property="Canvas.Left" Value="{Binding CanvasX}" />
-                                    <Setter Property="Canvas.Top" Value="{Binding CanvasY}" />
-                                </Style>
-                            </ItemsControl.ItemContainerStyle>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="-6,-6,0,0">
-                                        <!-- Outer circle -->
-                                        <Ellipse Width="12" Height="12" StrokeThickness="1.5">
-                                            <Ellipse.Stroke>
-                                                <SolidColorBrush Color="{Binding StrokeColor}" />
-                                            </Ellipse.Stroke>
-                                            <Ellipse.Fill>
-                                                <SolidColorBrush Color="{Binding FillColor}" Opacity="0.2" />
-                                            </Ellipse.Fill>
-                                        </Ellipse>
-                                        <!-- Inner dot -->
-                                        <Ellipse Width="4" Height="4" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            <Ellipse.Fill>
-                                                <SolidColorBrush Color="{Binding FillColor}" />
-                                            </Ellipse.Fill>
-                                        </Ellipse>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </Canvas>
+                        <!-- Labels overlay -->
+                        <TextBlock Text="Pattern" FontSize="9" Foreground="#444"
+                                   HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,2" />
+                        <TextBlock Text="{Binding ProgressText}" FontSize="10" Foreground="#666"
+                                   HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,4,2" />
+                    </Grid>
+                </Border>
 
-                    <!-- Progress text overlay -->
-                    <TextBlock Text="{Binding ProgressText}" FontSize="10" Foreground="#666"
-                               HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,6,3" />
-                </Grid>
-            </Border>
+                <!-- Camera Preview -->
+                <Border Grid.Column="1" BorderBrush="#272d42" BorderThickness="1" CornerRadius="3"
+                        Background="#080a10" Margin="2,0,0,0" MinHeight="200">
+                    <Grid>
+                        <Image Source="{Binding LastCapturedImage}" Stretch="Uniform"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <TextBlock Text="Preview" FontSize="9" Foreground="#444"
+                                   HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4,2" />
+                        <!-- Placeholder when no image -->
+                        <TextBlock Text="No image yet" FontSize="11" Foreground="#333"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Visibility="{Binding LastCapturedImage, Converter={StaticResource NullToVisibilityConverter}}" />
+                    </Grid>
+                </Border>
+            </Grid>
 
         </StackPanel>
     </DataTemplate>
