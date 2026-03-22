@@ -244,7 +244,9 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
 
         private string skyWaveOutputDirectory = "";
         public string SkyWaveOutputDirectory {
-            get => skyWaveOutputDirectory;
+            get => string.IsNullOrEmpty(skyWaveOutputDirectory)
+                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "SKW_Output")
+                : skyWaveOutputDirectory;
             set { skyWaveOutputDirectory = value; RaisePropertyChanged(); SaveSettings(); }
         }
 
@@ -722,7 +724,8 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 var headers = FitsHeaderWriter.BuildHeaders(
                     fl, pixelSize, Binning, BinToHalf, ExposureTime, -999, FilterName);
 
-                string outputDir = !string.IsNullOrEmpty(SkyWaveOutputDirectory) ? SkyWaveOutputDirectory : tempDir;
+                // Always use the SkyWave output directory (defaults to Desktop/SKW_Output if not set)
+                string outputDir = SkyWaveOutputDirectory;
                 Directory.CreateDirectory(outputDir);
                 string outputFile = $"SKW_Collimation_{DateTime.Now:yyyyMMdd_HHmmss}.fits";
                 string outputPath = Path.Combine(outputDir, outputFile);
@@ -796,8 +799,10 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 accessor.SetValueBoolean(SETTINGS_PREFIX + "CropToCircle", CropToCircle);
                 accessor.SetValueBoolean(SETTINGS_PREFIX + "BinToHalf", BinToHalf);
                 accessor.SetValueBoolean(SETTINGS_PREFIX + "AutoCleanSubFrames", AutoCleanSubFrames);
-                accessor.SetValueString(SETTINGS_PREFIX + "SkyWaveOutputDirectory", SkyWaveOutputDirectory);
-            } catch { }
+                accessor.SetValueString(SETTINGS_PREFIX + "SkyWaveOutputDirectory", skyWaveOutputDirectory);
+            } catch (Exception ex) {
+                Logger.Warning($"SKW: Failed to save settings: {ex.Message}");
+            }
         }
 
         private void LoadSettings() {
@@ -805,6 +810,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 var guid = new Guid("b7e3f1a2-9c4d-4e8b-a6f5-1d2c3b4a5e6f");
                 var accessor = new NINA.Profile.PluginOptionsAccessor(profileService, guid);
                 starName = accessor.GetValueString(SETTINGS_PREFIX + "StarName", starName);
+                Logger.Info($"SKW: Loaded settings — star={starName}, dir={skyWaveOutputDirectory}");
                 targetRA = accessor.GetValueString(SETTINGS_PREFIX + "TargetRA", targetRA);
                 targetDec = accessor.GetValueString(SETTINGS_PREFIX + "TargetDec", targetDec);
                 defocusSteps = accessor.GetValueInt32(SETTINGS_PREFIX + "DefocusSteps", defocusSteps);
@@ -822,7 +828,10 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 binToHalf = accessor.GetValueBoolean(SETTINGS_PREFIX + "BinToHalf", binToHalf);
                 autoCleanSubFrames = accessor.GetValueBoolean(SETTINGS_PREFIX + "AutoCleanSubFrames", autoCleanSubFrames);
                 skyWaveOutputDirectory = accessor.GetValueString(SETTINGS_PREFIX + "SkyWaveOutputDirectory", skyWaveOutputDirectory);
-            } catch { }
+                Logger.Info($"SKW: Settings loaded — star={starName}, filter={filterName}, dir={skyWaveOutputDirectory}");
+            } catch (Exception ex) {
+                Logger.Warning($"SKW: Failed to load settings: {ex.Message}");
+            }
         }
 
         private void LoadFromProfile() {
