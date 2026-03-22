@@ -45,7 +45,7 @@ jobs:
           Copy-Item "install.bat" "staging/"
           Copy-Item "uninstall.bat" "staging/"
           @"
-          AstroCircular SkyWaver for N.I.N.A. — v0.1.0
+          AstroCircular SkyWaver for N.I.N.A. — v0.2.0
           ==============================================
 
           INSTALL:  Double-click install.bat (close NINA first!)
@@ -54,13 +54,13 @@ jobs:
 
           UNINSTALL: Double-click uninstall.bat
 
-          After installing, restart N.I.N.A. and find the plugin
-          in Options > Plugins and the sequence instructions
-          under the "AstroCircular SKW" category.
+          After installing, restart N.I.N.A. and find the
+          SKW Collimation panel in the tool windows.
+          Settings in Options > Plugins > AstroCircular SkyWaver.
 
           https://github.com/joergs-git/astrocircular-skywaver-for-nina
           "@ | Out-File -Encoding utf8 "staging/README.txt"
-          Compress-Archive -Path "staging/*" -DestinationPath "AstroCircular.SkyWaver-v0.1.0.zip" -Force
+          Compress-Archive -Path "staging/*" -DestinationPath "AstroCircular.SkyWaver-v0.2.0.zip" -Force
 
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
@@ -68,30 +68,30 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "v0.1.0-build.${{ github.run_number }}"
-          $title = "AstroCircular SkyWaver v0.1.0 (build ${{ github.run_number }})"
+          $tag = "v0.2.0-build.${{ github.run_number }}"
+          $title = "AstroCircular SkyWaver v0.2.0 (build ${{ github.run_number }})"
           $notes = @"
-          ## AstroCircular SkyWaver for N.I.N.A. — v0.1.0
+          ## AstroCircular SkyWaver for N.I.N.A. — v0.2.0
 
           Native NINA plugin for automated SkyWave telescope collimation.
 
           ### Install
-          1. Download ``AstroCircular.SkyWaver-v0.1.0.zip`` below
+          1. Download ``AstroCircular.SkyWaver-v0.2.0.zip`` below
           2. Unzip and double-click ``install.bat``
           3. Restart N.I.N.A.
 
-          ### Sequence Instructions
-          - **SKW Collimation Run** — full one-click workflow
-          - **SKW Defocus** — move focuser for defocused imaging
-          - **SKW Circular Capture** — capture at ring positions
-          - **SKW Integrate Frames** — average, crop, bin2, save FITS
+          ### Usage
+          - Open NINA > find **SKW Collimation** panel in the tool windows
+          - Select a star, configure parameters, click **Run Collimation**
+          - Plugin controls mount, focuser, and camera directly
+          - Integrated FITS saved to your SkyWave watch folder
 
           > Early development build — report issues at https://github.com/joergs-git/astrocircular-skywaver-for-nina/issues
           "@
           # Delete previous pre-release with same base version if exists
           gh release list --repo $env:GITHUB_REPOSITORY --limit 10 --json tagName --jq '.[].tagName' | ForEach-Object {
-            if ($_ -like "v0.1.0-build.*") {
+            if ($_ -like "v0.2.0-build.*") {
               gh release delete $_ --repo $env:GITHUB_REPOSITORY --yes --cleanup-tag 2>$null
             }
           }
-          gh release create $tag "AstroCircular.SkyWaver-v0.1.0.zip" --repo $env:GITHUB_REPOSITORY --title $title --notes $notes --prerelease
+          gh release create $tag "AstroCircular.SkyWaver-v0.2.0.zip" --repo $env:GITHUB_REPOSITORY --title $title --notes $notes --prerelease

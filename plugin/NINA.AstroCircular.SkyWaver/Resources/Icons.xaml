@@ -1,0 +1,48 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- SKW Panel icon: concentric wavefront rings + ring of defocused stars -->
+    <GeometryGroup x:Key="SkwPanelIconSVG" FillRule="Nonzero">
+        <!-- Outer circle (border) -->
+        <EllipseGeometry Center="16,16" RadiusX="15" RadiusY="15" />
+        <EllipseGeometry Center="16,16" RadiusX="14" RadiusY="14" />
+
+        <!-- Wavefront rings (center) -->
+        <EllipseGeometry Center="16,16" RadiusX="5.5" RadiusY="5.5" />
+        <EllipseGeometry Center="16,16" RadiusX="5" RadiusY="5" />
+        <EllipseGeometry Center="16,16" RadiusX="4" RadiusY="4" />
+        <EllipseGeometry Center="16,16" RadiusX="3.5" RadiusY="3.5" />
+        <EllipseGeometry Center="16,16" RadiusX="2.5" RadiusY="2.5" />
+        <EllipseGeometry Center="16,16" RadiusX="2" RadiusY="2" />
+
+        <!-- Center dot -->
+        <EllipseGeometry Center="16,16" RadiusX="0.8" RadiusY="0.8" />
+
+        <!-- 8 defocused star donuts around the ring -->
+        <!-- Top -->
+        <EllipseGeometry Center="16,5" RadiusX="1.8" RadiusY="1.8" />
+        <EllipseGeometry Center="16,5" RadiusX="0.8" RadiusY="0.8" />
+        <!-- Top-right -->
+        <EllipseGeometry Center="23.8,8.2" RadiusX="1.8" RadiusY="1.8" />
+        <EllipseGeometry Center="23.8,8.2" RadiusX="0.8" RadiusY="0.8" />
+        <!-- Right -->
+        <EllipseGeometry Center="27,16" RadiusX="1.8" RadiusY="1.8" />
+        <EllipseGeometry Center="27,16" RadiusX="0.8" RadiusY="0.8" />
+        <!-- Bottom-right -->
+        <EllipseGeometry Center="23.8,23.8" RadiusX="1.8" RadiusY="1.8" />
+        <EllipseGeometry Center="23.8,23.8" RadiusX="0.8" RadiusY="0.8" />
+        <!-- Bottom -->
+        <EllipseGeometry Center="16,27" RadiusX="1.8" RadiusY="1.8" />
+        <EllipseGeometry Center="16,27" RadiusX="0.8" RadiusY="0.8" />
+        <!-- Bottom-left -->
+        <EllipseGeometry Center="8.2,23.8" RadiusX="1.8" RadiusY="1.8" />
+        <EllipseGeometry Center="8.2,23.8" RadiusX="0.8" RadiusY="0.8" />
+        <!-- Left -->
+        <EllipseGeometry Center="5,16" RadiusX="1.8" RadiusY="1.8" />
+        <EllipseGeometry Center="5,16" RadiusX="0.8" RadiusY="0.8" />
+        <!-- Top-left -->
+        <EllipseGeometry Center="8.2,8.2" RadiusX="1.8" RadiusY="1.8" />
+        <EllipseGeometry Center="8.2,8.2" RadiusX="0.8" RadiusY="0.8" />
+    </GeometryGroup>
+
+</ResourceDictionary>
