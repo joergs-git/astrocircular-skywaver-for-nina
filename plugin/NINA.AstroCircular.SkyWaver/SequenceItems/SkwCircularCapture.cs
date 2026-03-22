@@ -246,7 +246,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
                 ExposureTime,
                 CaptureSequence.ImageTypes.LIGHT,
                 new FilterInfo(FilterName, 0, (short)0),
-                new BinningMode(Binning, Binning),
+                new BinningMode((short)Binning, (short)Binning),
                 1) {
                 Gain = Gain,
                 Offset = Offset
