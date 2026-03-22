@@ -482,6 +482,29 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             }
         }
 
+        // ── Filter Switch Helper ──
+
+        private async Task SwitchFilter(string name, CancellationToken ct) {
+            try {
+                var profileFilters = profileService?.ActiveProfile?.FilterWheelSettings?.FilterWheelFilters;
+                FilterInfo target = null;
+                if (profileFilters != null) {
+                    foreach (var f in profileFilters) {
+                        if (f.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) {
+                            target = f;
+                            break;
+                        }
+                    }
+                }
+                if (target == null) {
+                    target = new FilterInfo(name, 0, (short)-1);
+                }
+                await filterWheelMediator.ChangeFilter(target, ct);
+            } catch (Exception ex) {
+                Logger.Warning($"SKW: Filter switch to '{name}' failed ({ex.Message})");
+            }
+        }
+
         // ── Cancel ──
 
         private void Cancel() {
@@ -531,31 +554,12 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                     ? cameraMediator.GetInfo().YSize * profileService.ActiveProfile.CameraSettings.PixelSize / 1000.0
                     : 24.0;
 
-                // Step 1: Switch filter — find the filter by name from the NINA profile
-                StatusText = $"Switching to filter {FilterName}...";
-                Progress = 5;
-                try {
-                    var profileFilters = profileService?.ActiveProfile?.FilterWheelSettings?.FilterWheelFilters;
-                    FilterInfo targetFilter = null;
-                    if (profileFilters != null) {
-                        foreach (var f in profileFilters) {
-                            if (f.Name.Equals(FilterName, StringComparison.OrdinalIgnoreCase)) {
-                                targetFilter = f;
-                                break;
-                            }
-                        }
-                    }
-                    if (targetFilter == null) {
-                        // Fallback: create a FilterInfo and let NINA try to match by name
-                        targetFilter = new FilterInfo(FilterName, 0, (short)-1);
-                    }
-                    await filterWheelMediator.ChangeFilter(targetFilter, ct);
-                } catch (Exception filterEx) {
-                    Logger.Warning($"SKW: Filter switch failed ({filterEx.Message}), continuing with current filter");
-                    StatusText = $"Filter switch failed, continuing...";
-                }
+                // Step 1: Switch to L filter for plate-solve centering (best SNR for solving)
+                StatusText = "Switching to L filter for plate-solve...";
+                Progress = 3;
+                await SwitchFilter("L", ct);
 
-                // Step 2: Slew & Center on target star (plate-solve, in focus)
+                // Step 2: Slew & Center on target star (plate-solve, in focus, L filter)
                 StatusText = $"Centering on {StarName} (slew + plate-solve)...";
                 Progress = 10;
                 var coords = new Coordinates(
@@ -563,7 +567,6 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                     Angle.ByDegree(CoordinateUtils.ParseDMS(TargetDec)),
                     Epoch.J2000);
 
-                // Try plate-solve centering, fall back to blind slew if it fails
                 try {
                     var centerInstruction = new Center(
                         profileService, telescopeMediator, imagingMediator, filterWheelMediator,
@@ -584,6 +587,11 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 StatusText = $"Defocusing {(relativeDefocus > 0 ? "+" : "")}{relativeDefocus} steps...";
                 Progress = 15;
                 await focuserMediator.MoveFocuserRelative(relativeDefocus, ct);
+
+                // Step 3b: Switch to target filter for capture (after defocus)
+                StatusText = $"Switching to {FilterName} filter for capture...";
+                Progress = 18;
+                await SwitchFilter(FilterName, ct);
 
                 // Step 4: Compute positions and capture
                 var (fovW, fovH) = CircularPatternCalculator.ComputeFOV(sensorW, sensorH, fl);
