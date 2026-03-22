@@ -29,10 +29,11 @@ goto :eof
 :found_dll
 echo  DLL: %DLL%
 
-:: Find NINA Plugins folder
+:: NINA 3.x uses Plugins\3.0.0\ after first-run migration
+:: Try versioned path first, then fall back to root Plugins
 set "TARGET="
-if exist "%localappdata%\NINA\3\Plugins" (
-    set "TARGET=%localappdata%\NINA\3\Plugins\AstroCircular.SkyWaver"
+if exist "%localappdata%\NINA\Plugins\3.0.0" (
+    set "TARGET=%localappdata%\NINA\Plugins\3.0.0\AstroCircular.SkyWaver"
     goto :found_nina
 )
 if exist "%localappdata%\NINA\Plugins" (
@@ -41,8 +42,8 @@ if exist "%localappdata%\NINA\Plugins" (
 )
 
 echo.
-echo  Could not find NINA Plugins folder automatically.
-echo  Enter path to your NINA Plugins folder:
+echo  Could not find NINA Plugins folder.
+echo  Enter the full path to your NINA Plugins folder:
 echo.
 set /p "TARGET_BASE=  Path: "
 set "TARGET=%TARGET_BASE%\AstroCircular.SkyWaver"
@@ -64,6 +65,15 @@ if errorlevel 1 (
     echo.
     pause
     goto :eof
+)
+
+:: Also clean up old location if it exists (pre-migration path)
+if exist "%localappdata%\NINA\Plugins\AstroCircular.SkyWaver\NINA.AstroCircular.SkyWaver.dll" (
+    if not "%TARGET%"=="%localappdata%\NINA\Plugins\AstroCircular.SkyWaver" (
+        echo  Cleaning up old plugin location...
+        del /Q "%localappdata%\NINA\Plugins\AstroCircular.SkyWaver\NINA.AstroCircular.SkyWaver.dll" >NUL 2>&1
+        rmdir "%localappdata%\NINA\Plugins\AstroCircular.SkyWaver" >NUL 2>&1
+    )
 )
 
 echo  [OK] Installed to %TARGET%
