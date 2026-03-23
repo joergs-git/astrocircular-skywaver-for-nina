@@ -3,10 +3,6 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="pack://application:,,,/NINA.CollimationHelper.SkyWave;component/Resources/Icons.xaml" />
-    </ResourceDictionary.MergedDictionaries>
-
     <DataTemplate x:Key="NINA.AstroCircular.SkyWaver.Dockables.SkwPanelVM_Dockable">
         <StackPanel Margin="5">
 
@@ -224,5 +220,31 @@
 
         </StackPanel>
     </DataTemplate>
+
+    <!-- Plugin icon: 3 concentric circles + center dot (collimation target) -->
+    <GeometryGroup x:Key="SkwPanelIconSVG" FillRule="Nonzero">
+        <!-- Large circle -->
+        <EllipseGeometry Center="16,16" RadiusX="14.5" RadiusY="14.5" />
+        <EllipseGeometry Center="16,16" RadiusX="13.2" RadiusY="13.2" />
+        <!-- Medium circle -->
+        <EllipseGeometry Center="16,16" RadiusX="9.5" RadiusY="9.5" />
+        <EllipseGeometry Center="16,16" RadiusX="8.2" RadiusY="8.2" />
+        <!-- Small circle -->
+        <EllipseGeometry Center="16,16" RadiusX="5" RadiusY="5" />
+        <EllipseGeometry Center="16,16" RadiusX="3.7" RadiusY="3.7" />
+        <!-- Center dot -->
+        <EllipseGeometry Center="16,16" RadiusX="1.2" RadiusY="1.2" />
+    </GeometryGroup>
+
+    <!-- Small inline icon (10x10) for labels -->
+    <GeometryGroup x:Key="SkwMiniIconSVG" FillRule="Nonzero">
+        <EllipseGeometry Center="5,5" RadiusX="4.5" RadiusY="4.5" />
+        <EllipseGeometry Center="5,5" RadiusX="4.0" RadiusY="4.0" />
+        <EllipseGeometry Center="5,5" RadiusX="3.0" RadiusY="3.0" />
+        <EllipseGeometry Center="5,5" RadiusX="2.5" RadiusY="2.5" />
+        <EllipseGeometry Center="5,5" RadiusX="1.5" RadiusY="1.5" />
+        <EllipseGeometry Center="5,5" RadiusX="1.0" RadiusY="1.0" />
+        <EllipseGeometry Center="5,5" RadiusX="0.4" RadiusY="0.4" />
+    </GeometryGroup>
 
 </ResourceDictionary>

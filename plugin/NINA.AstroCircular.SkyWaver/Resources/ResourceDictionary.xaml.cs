@@ -22,9 +22,6 @@ namespace NINA.AstroCircular.SkyWaver.Resources {
             MergedDictionaries.Add(new ResourceDictionary {
                 Source = new System.Uri("pack://application:,,,/NINA.CollimationHelper.SkyWave;component/Resources/SkwCollimationRunTemplate.xaml")
             });
-            MergedDictionaries.Add(new ResourceDictionary {
-                Source = new System.Uri("pack://application:,,,/NINA.CollimationHelper.SkyWave;component/Resources/Icons.xaml")
-            });
         }
     }
 }

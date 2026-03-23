@@ -72,17 +72,11 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
 
             Title = "Collimation Helper for SkyWave";
 
-            // Icon — must use full pack URI (same format as ResourceDictionary.xaml.cs)
-            try {
-                var dict = new ResourceDictionary();
-                dict.Source = new Uri("pack://application:,,,/NINA.CollimationHelper.SkyWave;component/Resources/Icons.xaml");
-                var geo = (GeometryGroup)dict["SkwPanelIconSVG"];
-                geo.Freeze();
-                ImageGeometry = geo;
-                Logger.Info("SKW: Plugin icon loaded successfully");
-            } catch (Exception ex) {
-                Logger.Warning($"SKW: Failed to load plugin icon: {ex.Message}");
-            }
+            // Icon — load from DockableTemplates.xaml (same pattern as InjectAutofocus plugin)
+            var dict = new ResourceDictionary();
+            dict.Source = new Uri("NINA.CollimationHelper.SkyWave;component/Dockables/DockableTemplates.xaml", UriKind.RelativeOrAbsolute);
+            ImageGeometry = (System.Windows.Media.GeometryGroup)dict["SkwPanelIconSVG"];
+            ImageGeometry.Freeze();
 
             // Commands
             RunCommand = new AsyncCommand<bool>(RunCollimation, (o) => !IsRunning);
