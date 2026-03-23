@@ -826,7 +826,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 Logger.Info($"SKW: Averaged {frameCount} frames ({width}x{height})");
 
                 // Crop to ring pattern bounding box + 50px margin (reduces file size)
-                int cropMarginPx = 50;
+                int cropMarginPx = 150;
                 int halfCropW = (int)(RadiusPercent / 100.0 * width / 2) + cropMarginPx;
                 int halfCropH = (int)(RadiusPercent / 100.0 * height / 2) + cropMarginPx;
                 int cropW = Math.Min(halfCropW * 2, width);
