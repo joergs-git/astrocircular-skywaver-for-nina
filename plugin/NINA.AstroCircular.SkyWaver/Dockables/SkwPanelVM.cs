@@ -13,6 +13,7 @@ using NINA.Image.Interfaces;
 using NINA.PlateSolving;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.SequenceItem.Platesolving;
+using NINA.WPF.Base.Interfaces.ViewModel;
 using NINA.WPF.Base.ViewModel;
 using System;
 using System.Collections.Generic;
@@ -39,6 +40,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
         private readonly IGuiderMediator guiderMediator;
         private readonly IDomeMediator domeMediator;
         private readonly IDomeFollower domeFollower;
+        private readonly IAutoFocusVMFactory autoFocusVMFactory;
 
         private CancellationTokenSource runCts;
 
@@ -53,7 +55,8 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             IImageDataFactory imageDataFactory,
             IGuiderMediator guiderMediator,
             IDomeMediator domeMediator,
-            IDomeFollower domeFollower
+            IDomeFollower domeFollower,
+            IAutoFocusVMFactory autoFocusVMFactory
         ) : base(profileService) {
             this.telescopeMediator = telescopeMediator;
             this.cameraMediator = cameraMediator;
@@ -64,6 +67,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             this.guiderMediator = guiderMediator;
             this.domeMediator = domeMediator;
             this.domeFollower = domeFollower;
+            this.autoFocusVMFactory = autoFocusVMFactory;
 
             Title = "SkyWave Collimator Helper";
 
@@ -593,17 +597,34 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                     await telescopeMediator.SlewToCoordinatesAsync(coords, ct);
                 }
 
-                // Step 3: Defocus
-                StatusText = $"Defocusing {(relativeDefocus > 0 ? "+" : "")}{relativeDefocus} steps...";
-                Progress = 15;
-                await focuserMediator.MoveFocuserRelative(relativeDefocus, ct);
-
-                // Step 3b: Switch to target filter for capture (after defocus)
+                // Step 3: Switch to target filter for capture (before defocus)
                 StatusText = $"Switching to {FilterName} filter for capture...";
-                Progress = 18;
+                Progress = 15;
                 await SwitchFilter(FilterName, ct);
 
-                // Step 4: Compute positions and capture
+                // Step 3b: Offer autofocus before defocusing
+                var afAnswer = Application.Current.Dispatcher.Invoke(() =>
+                    MessageBox.Show(
+                        "Run autofocus routine now before defocusing?",
+                        "SkyWave — Autofocus",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question));
+                if (afAnswer == MessageBoxResult.Yes) {
+                    StatusText = "Running autofocus...";
+                    Progress = 17;
+                    var af = autoFocusVMFactory.Create();
+                    var afFilter = new FilterInfo(FilterName, 0, (short)0);
+                    await af.StartAutoFocus(afFilter, ct, progressReporter);
+                    Logger.Info("SKW: Autofocus completed before defocus");
+                    StatusText = "Autofocus complete";
+                }
+
+                // Step 4: Defocus
+                StatusText = $"Defocusing {(relativeDefocus > 0 ? "+" : "")}{relativeDefocus} steps...";
+                Progress = 18;
+                await focuserMediator.MoveFocuserRelative(relativeDefocus, ct);
+
+                // Step 5: Compute positions and capture
                 var (fovW, fovH) = CircularPatternCalculator.ComputeFOV(sensorW, sensorH, fl);
                 double centerRA = CoordinateUtils.ParseHMS(TargetRA);
                 double centerDec = CoordinateUtils.ParseDMS(TargetDec);
