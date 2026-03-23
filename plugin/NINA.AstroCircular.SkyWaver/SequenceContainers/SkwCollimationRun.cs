@@ -98,12 +98,6 @@ namespace NINA.AstroCircular.SkyWaver.SequenceContainers {
         // ── Integration ──
 
         [JsonProperty]
-        public bool CropToCircle { get; set; } = true;
-
-        [JsonProperty]
-        public bool BinToHalf { get; set; } = true;
-
-        [JsonProperty]
         public bool AutoCleanSubFrames { get; set; } = true;
 
         // ── Telescope/Sensor (from settings) ──
@@ -174,8 +168,6 @@ namespace NINA.AstroCircular.SkyWaver.SequenceContainers {
                 Offset = Offset,
                 Binning = Binning,
                 SettleSeconds = SettleSeconds,
-                CropToCircle = CropToCircle,
-                BinToHalf = BinToHalf,
                 AutoCleanSubFrames = AutoCleanSubFrames,
                 FocalLengthMm = FocalLengthMm,
                 ApertureMm = ApertureMm,
@@ -258,8 +250,6 @@ namespace NINA.AstroCircular.SkyWaver.SequenceContainers {
                     InputFiles = capture.CapturedFiles,
                     OutputDirectory = outputDir,
                     OutputFileName = outputFileName,
-                    CropToCircle = CropToCircle,
-                    BinToHalf = BinToHalf,
                     FocalLengthMm = FocalLengthMm,
                     PixelSizeUm = PixelSizeUm,
                     CaptureBinning = Binning,

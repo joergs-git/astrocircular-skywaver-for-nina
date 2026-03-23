@@ -5,7 +5,7 @@ namespace NINA.AstroCircular.SkyWaver.Imaging {
     /// <summary>
     /// Ensures output FITS files have all headers required by SkyWave:
     /// FOCALLEN, XPIXSZ, YPIXSZ, XBINNING, YBINNING, EXPTIME, CCD-TEMP, FILTER.
-    /// Updates pixel size and binning headers when bin2 is applied.
+    /// Pixel size is physical * binning (camera-side binning only).
     /// </summary>
     public static class FitsHeaderWriter {
 
@@ -14,8 +14,7 @@ namespace NINA.AstroCircular.SkyWaver.Imaging {
         /// </summary>
         /// <param name="focalLengthMm">Telescope focal length in mm</param>
         /// <param name="pixelSizeUm">Physical pixel size in microns</param>
-        /// <param name="captureBinning">Binning used during capture (1 or 2)</param>
-        /// <param name="wasBinned">True if post-integration bin2 was applied</param>
+        /// <param name="binning">Camera-side binning (1, 2, 3, or 4)</param>
         /// <param name="exposureSeconds">Total or average exposure time</param>
         /// <param name="ccdTemp">Sensor temperature in Celsius</param>
         /// <param name="filterName">Filter name (e.g. "R")</param>
@@ -23,22 +22,20 @@ namespace NINA.AstroCircular.SkyWaver.Imaging {
         public static Dictionary<string, object> BuildHeaders(
             double focalLengthMm,
             double pixelSizeUm,
-            int captureBinning,
-            bool wasBinned,
+            int binning,
             double exposureSeconds,
             double ccdTemp,
             string filterName) {
 
-            // Effective pixel size: physical * capture binning * (2 if post-bin applied)
-            double effectivePixelSize = pixelSizeUm * captureBinning * (wasBinned ? 2.0 : 1.0);
-            int effectiveBinning = captureBinning * (wasBinned ? 2 : 1);
+            // Effective pixel size: physical * camera binning
+            double effectivePixelSize = pixelSizeUm * binning;
 
             return new Dictionary<string, object> {
                 { "FOCALLEN", focalLengthMm },
                 { "XPIXSZ",  effectivePixelSize },
                 { "YPIXSZ",  effectivePixelSize },
-                { "XBINNING", effectiveBinning },
-                { "YBINNING", effectiveBinning },
+                { "XBINNING", binning },
+                { "YBINNING", binning },
                 { "EXPTIME",  exposureSeconds },
                 { "CCD-TEMP", ccdTemp },
                 { "FILTER",   filterName },

@@ -12,14 +12,8 @@
             <!-- Post-Capture Integration -->
             <GroupBox Header="Post-Capture Integration" Margin="0,0,0,4">
                 <StackPanel Margin="6,2">
-                    <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <CheckBox IsChecked="{Binding Settings.CropToCircle}" VerticalAlignment="Center" />
-                        <TextBlock Text="Crop to inscribed circle — removes corners outside ring pattern" Margin="6,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <CheckBox IsChecked="{Binding Settings.BinToHalf}" VerticalAlignment="Center" />
-                        <TextBlock Text="Bin 2x after integration — halves resolution for SkyWave" Margin="6,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
+                    <TextBlock Text="Integration is a pure pixel-by-pixel average — no alignment, no rejection, no interpolation, no normalization."
+                               Margin="0,2" FontStyle="Italic" Foreground="#888" TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal" Margin="0,2">
                         <CheckBox IsChecked="{Binding Settings.AutoCleanSubFrames}" VerticalAlignment="Center" />
                         <TextBlock Text="Auto-delete sub-frames — keeps only the integrated FITS" Margin="6,0,0,0" VerticalAlignment="Center" />

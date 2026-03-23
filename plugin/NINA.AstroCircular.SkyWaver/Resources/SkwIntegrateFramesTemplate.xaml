@@ -8,10 +8,8 @@
         <StackPanel Orientation="Horizontal">
             <TextBlock Text="SKW Integrate → " />
             <TextBlock Text="{Binding OutputDirectory}" FontWeight="Bold" />
-            <TextBlock Text=" | Crop: " />
-            <TextBlock Text="{Binding CropToCircle}" />
-            <TextBlock Text=" | Bin2: " />
-            <TextBlock Text="{Binding BinToHalf}" />
+            <TextBlock Text=" | Bin: " />
+            <TextBlock Text="{Binding CaptureBinning}" />
         </StackPanel>
     </DataTemplate>
 

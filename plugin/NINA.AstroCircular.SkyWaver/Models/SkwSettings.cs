@@ -143,18 +143,6 @@ namespace NINA.AstroCircular.SkyWaver.Models {
 
         // ── Integration Defaults ──
 
-        private bool cropToCircle = true;
-        public bool CropToCircle {
-            get => cropToCircle;
-            set { cropToCircle = value; OnPropertyChanged(); }
-        }
-
-        private bool binToHalf = true;
-        public bool BinToHalf {
-            get => binToHalf;
-            set { binToHalf = value; OnPropertyChanged(); }
-        }
-
         private bool autoCleanSubFrames = true;
         public bool AutoCleanSubFrames {
             get => autoCleanSubFrames;

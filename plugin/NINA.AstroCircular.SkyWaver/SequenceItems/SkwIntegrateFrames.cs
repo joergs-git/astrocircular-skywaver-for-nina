@@ -36,12 +36,6 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
         [JsonProperty]
         public string OutputFileName { get; set; } = "SKW_Collimation_Integrated.fits";
 
-        [JsonProperty]
-        public bool CropToCircle { get; set; } = true;
-
-        [JsonProperty]
-        public bool BinToHalf { get; set; } = true;
-
         // Sensor/telescope params for FITS header updates
         [JsonProperty]
         public double FocalLengthMm { get; set; } = 1946;
@@ -81,8 +75,6 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
                 InputDirectory = InputDirectory,
                 OutputDirectory = OutputDirectory,
                 OutputFileName = OutputFileName,
-                CropToCircle = CropToCircle,
-                BinToHalf = BinToHalf,
                 FocalLengthMm = FocalLengthMm,
                 PixelSizeUm = PixelSizeUm,
                 CaptureBinning = CaptureBinning,
@@ -122,28 +114,12 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
                 Status = $"SKW: Averaged {frameCount} frames ({width}x{height})"
             });
 
-            // Step 2: Optional crop to inscribed circle
-            if (CropToCircle) {
-                (averaged, width, height) = FitsAverager.CropToSquare(averaged, width, height);
-                progress?.Report(new ApplicationStatus {
-                    Status = $"SKW: Cropped to circle ({width}x{height})"
-                });
-            }
-
-            // Step 3: Optional bin 2x2
-            if (BinToHalf) {
-                (averaged, width, height) = FitsAverager.Bin2x2(averaged, width, height);
-                progress?.Report(new ApplicationStatus {
-                    Status = $"SKW: Binned 2x ({width}x{height})"
-                });
-            }
-
-            // Step 4: Convert to 16-bit
+            // Step 2: Convert to 16-bit (pure average, no post-processing)
             ushort[] pixelData = FitsAverager.ToUShort16(averaged);
 
-            // Step 5: Build FITS headers with correct values
+            // Step 3: Build FITS headers with correct values
             var headers = FitsHeaderWriter.BuildHeaders(
-                FocalLengthMm, PixelSizeUm, CaptureBinning, BinToHalf,
+                FocalLengthMm, PixelSizeUm, CaptureBinning,
                 ExposureSeconds, -999, FilterName); // -999 placeholder for CCD temp
 
             // Step 6: Save output FITS using raw FITS writer
@@ -180,7 +156,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
         }
 
         public override string ToString() {
-            return $"Category: SkyWave Collimation, Item: SkwIntegrateFrames, Crop: {CropToCircle}, Bin2: {BinToHalf}";
+            return $"Category: SkyWave Collimation, Item: SkwIntegrateFrames, Bin: {CaptureBinning}";
         }
     }
 }

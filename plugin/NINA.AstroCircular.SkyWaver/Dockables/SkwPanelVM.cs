@@ -215,10 +215,16 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             set { offset = value; RaisePropertyChanged(); SaveSettings(); }
         }
 
-        private int binning = 1;
+        private int binning = 2;
         public int Binning {
             get => binning;
-            set { binning = value; RaisePropertyChanged(); SaveSettings(); }
+            set { binning = value; RaisePropertyChanged(); RaisePropertyChanged(nameof(BinningIndex)); SaveSettings(); }
+        }
+
+        /// <summary>ComboBox index: 0=1x1, 1=2x2, 2=3x3, 3=4x4</summary>
+        public int BinningIndex {
+            get => Binning - 1;
+            set { Binning = value + 1; }
         }
 
         // ── Pattern ──
@@ -248,18 +254,6 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
         }
 
         // ── Integration ──
-
-        private bool cropToCircle = false;
-        public bool CropToCircle {
-            get => cropToCircle;
-            set { cropToCircle = value; RaisePropertyChanged(); SaveSettings(); }
-        }
-
-        private bool binToHalf = true;
-        public bool BinToHalf {
-            get => binToHalf;
-            set { binToHalf = value; RaisePropertyChanged(); SaveSettings(); }
-        }
 
         private bool autoCleanSubFrames = false;
         public bool AutoCleanSubFrames {
@@ -601,6 +595,8 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             int relativeDefocus = DefocusSteps * DefocusDirection;
             bool hasDefocused = false; // Track whether defocus actually happened
             string originalFilter = null; // Track filter before we switch to L
+            bool success = false;
+            string successOutputFile = null;
             string outputDir = SkyWaveOutputDirectory;
             string sessionId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             string subFrameDir = Path.Combine(outputDir, "subframes_" + sessionId);
@@ -823,22 +819,15 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                         Logger.Warning($"SKW: Failed to read {existingFiles[f]}: {readEx.Message}");
                     }
                 }
+                // Pure pixel average — no alignment, no rejection, no interpolation, no binning, no cropping
                 for (int p = 0; p < pixelCount; p++) accumulated[p] /= frameCount;
-                var averaged = accumulated;
                 Logger.Info($"SKW: Averaged {frameCount} frames ({width}x{height})");
 
-                if (CropToCircle) {
-                    (averaged, width, height) = FitsAverager.CropToSquare(averaged, width, height);
-                }
-                if (BinToHalf) {
-                    (averaged, width, height) = FitsAverager.Bin2x2(averaged, width, height);
-                }
-
-                ushort[] pixelData = FitsAverager.ToUShort16(averaged);
+                ushort[] pixelData = FitsAverager.ToUShort16(accumulated);
 
                 double pixelSize = profileService?.ActiveProfile?.CameraSettings?.PixelSize ?? 3.76;
                 var headers = FitsHeaderWriter.BuildHeaders(
-                    fl, pixelSize, Binning, BinToHalf, ExposureTime, -999, FilterName);
+                    fl, pixelSize, Binning, ExposureTime, -999, ResolveFilterName(FilterName));
 
                 // Save integrated FITS directly in the output folder
                 Directory.CreateDirectory(outputDir);
@@ -865,7 +854,8 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
 
                 Progress = 100;
                 ProgressText = $"{capturedFiles.Count} / {total} positions done";
-                StatusText = $"Done! {capturedFiles.Count} frames integrated. Output: {outputFile}";
+                success = true;
+                successOutputFile = outputFile;
                 return true;
 
             } catch (OperationCanceledException) {
@@ -898,6 +888,17 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 IsRunning = false;
                 runCts?.Dispose();
                 runCts = null;
+
+                // Show result after cleanup is done
+                if (success) {
+                    StatusText = $"Done! Output: {successOutputFile}";
+                    Application.Current.Dispatcher.Invoke(() =>
+                        MessageBox.Show(
+                            $"Finished stacking!\n\nOutput: {successOutputFile}",
+                            "SkyWave — Collimation Complete",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information));
+                }
             }
         }
 
@@ -923,8 +924,6 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 accessor.SetValueInt32(SETTINGS_PREFIX + "RadiusPercent", RadiusPercent);
                 accessor.SetValueInt32(SETTINGS_PREFIX + "SettleSeconds", SettleSeconds);
                 accessor.SetValueBoolean(SETTINGS_PREFIX + "IncludeCenter", IncludeCenter);
-                accessor.SetValueBoolean(SETTINGS_PREFIX + "CropToCircle", CropToCircle);
-                accessor.SetValueBoolean(SETTINGS_PREFIX + "BinToHalf", BinToHalf);
                 accessor.SetValueBoolean(SETTINGS_PREFIX + "AutoCleanSubFrames", AutoCleanSubFrames);
                 accessor.SetValueString(SETTINGS_PREFIX + "SkyWaveOutputDirectory", skyWaveOutputDirectory);
             } catch (Exception ex) {
@@ -951,8 +950,6 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 radiusPercent = accessor.GetValueInt32(SETTINGS_PREFIX + "RadiusPercent", radiusPercent);
                 settleSeconds = accessor.GetValueInt32(SETTINGS_PREFIX + "SettleSeconds", settleSeconds);
                 includeCenter = accessor.GetValueBoolean(SETTINGS_PREFIX + "IncludeCenter", includeCenter);
-                cropToCircle = accessor.GetValueBoolean(SETTINGS_PREFIX + "CropToCircle", cropToCircle);
-                binToHalf = accessor.GetValueBoolean(SETTINGS_PREFIX + "BinToHalf", binToHalf);
                 autoCleanSubFrames = accessor.GetValueBoolean(SETTINGS_PREFIX + "AutoCleanSubFrames", autoCleanSubFrames);
                 skyWaveOutputDirectory = accessor.GetValueString(SETTINGS_PREFIX + "SkyWaveOutputDirectory", skyWaveOutputDirectory);
                 Logger.Info($"SKW: Settings loaded — star={starName}, filter={filterName}, dir={skyWaveOutputDirectory}");

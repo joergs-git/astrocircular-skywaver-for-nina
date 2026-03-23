@@ -82,31 +82,31 @@
                 <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding RingPositions, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
                 <TextBlock Grid.Row="2" Grid.Column="2" Text="Rad%" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
                 <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding RadiusPercent, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
-                <TextBlock Grid.Row="2" Grid.Column="4" Text="Settle" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
-                <TextBox Grid.Row="2" Grid.Column="5" Text="{Binding SettleSeconds, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
+                <TextBlock Grid.Row="2" Grid.Column="4" Text="Bin" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
+                <ComboBox Grid.Row="2" Grid.Column="5" SelectedIndex="{Binding BinningIndex}" Margin="2,1" FontSize="11">
+                    <ComboBoxItem Content="1x1" />
+                    <ComboBoxItem Content="2x2" />
+                    <ComboBoxItem Content="3x3" />
+                    <ComboBoxItem Content="4x4" />
+                </ComboBox>
             </Grid>
 
             <!-- Toggles -->
             <WrapPanel Margin="0,0,0,4">
                 <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
-                    <CheckBox IsChecked="{Binding CropToCircle}" VerticalAlignment="Center" />
-                    <TextBlock Text="Crop" Margin="4,0,0,0" FontSize="10" VerticalAlignment="Center"
-                               ToolTip="Crop to square inscribed in the ring pattern" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
-                    <CheckBox IsChecked="{Binding BinToHalf}" VerticalAlignment="Center" />
-                    <TextBlock Text="Bin2x" Margin="4,0,0,0" FontSize="10" VerticalAlignment="Center"
-                               ToolTip="2x2 downsample after integration" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
                     <CheckBox IsChecked="{Binding IncludeCenter}" VerticalAlignment="Center" />
                     <TextBlock Text="Center" Margin="4,0,0,0" FontSize="10" VerticalAlignment="Center"
                                ToolTip="Include center star position" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
                     <CheckBox IsChecked="{Binding AutoCleanSubFrames}" VerticalAlignment="Center" />
                     <TextBlock Text="Auto-delete subs" Margin="4,0,0,0" FontSize="10" VerticalAlignment="Center"
                                ToolTip="Delete individual frames after integration" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Settle" Margin="0,0,4,0" FontSize="10" VerticalAlignment="Center" />
+                    <TextBox Text="{Binding SettleSeconds, UpdateSourceTrigger=PropertyChanged}" Width="28" FontSize="10" VerticalAlignment="Center" />
+                    <TextBlock Text="s" Margin="2,0,0,0" FontSize="10" VerticalAlignment="Center" />
                 </StackPanel>
             </WrapPanel>
 
