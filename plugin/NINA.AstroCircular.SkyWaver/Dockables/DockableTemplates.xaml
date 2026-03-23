@@ -105,6 +105,11 @@
                                ToolTip="Run autofocus before defocusing" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
+                    <CheckBox IsChecked="{Binding CropAfterStack}" VerticalAlignment="Center" />
+                    <TextBlock Text="Crop" Margin="4,0,0,0" FontSize="10" VerticalAlignment="Center"
+                               ToolTip="Crop stacked image to ring pattern + 150px margin" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
                     <CheckBox IsChecked="{Binding AutoCleanSubFrames}" VerticalAlignment="Center" />
                     <TextBlock Text="Del subs" Margin="4,0,0,0" FontSize="10" VerticalAlignment="Center"
                                ToolTip="Delete individual frames after integration" />

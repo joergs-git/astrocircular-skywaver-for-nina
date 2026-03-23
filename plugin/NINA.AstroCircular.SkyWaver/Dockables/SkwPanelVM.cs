@@ -271,6 +271,12 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
 
         // ── Integration ──
 
+        private bool cropAfterStack = false;
+        public bool CropAfterStack {
+            get => cropAfterStack;
+            set { cropAfterStack = value; RaisePropertyChanged(); SaveSettings(); }
+        }
+
         private bool autoCleanSubFrames = false;
         public bool AutoCleanSubFrames {
             get => autoCleanSubFrames;
@@ -833,24 +839,26 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 for (int p = 0; p < pixelCount; p++) accumulated[p] /= frameCount;
                 Logger.Info($"SKW: Averaged {frameCount} frames ({width}x{height})");
 
-                // Crop to ring pattern bounding box + 50px margin (reduces file size)
-                int cropMarginPx = 150;
-                int halfCropW = (int)(RadiusPercent / 100.0 * width / 2) + cropMarginPx;
-                int halfCropH = (int)(RadiusPercent / 100.0 * height / 2) + cropMarginPx;
-                int cropW = Math.Min(halfCropW * 2, width);
-                int cropH = Math.Min(halfCropH * 2, height);
-                int cropX = (width - cropW) / 2;
-                int cropY = (height - cropH) / 2;
+                // Optional crop to ring pattern bounding box + 150px margin
+                if (CropAfterStack) {
+                    int cropMarginPx = 150;
+                    int halfCropW = (int)(RadiusPercent / 100.0 * width / 2) + cropMarginPx;
+                    int halfCropH = (int)(RadiusPercent / 100.0 * height / 2) + cropMarginPx;
+                    int cropW = Math.Min(halfCropW * 2, width);
+                    int cropH = Math.Min(halfCropH * 2, height);
+                    int cropX = (width - cropW) / 2;
+                    int cropY = (height - cropH) / 2;
 
-                if (cropW < width || cropH < height) {
-                    var cropped = new double[cropW * cropH];
-                    for (int row = 0; row < cropH; row++) {
-                        Array.Copy(accumulated, (cropY + row) * width + cropX, cropped, row * cropW, cropW);
+                    if (cropW < width || cropH < height) {
+                        var cropped = new double[cropW * cropH];
+                        for (int row = 0; row < cropH; row++) {
+                            Array.Copy(accumulated, (cropY + row) * width + cropX, cropped, row * cropW, cropW);
+                        }
+                        accumulated = cropped;
+                        width = cropW;
+                        height = cropH;
+                        Logger.Info($"SKW: Cropped to {width}x{height} (ring pattern + {cropMarginPx}px margin)");
                     }
-                    accumulated = cropped;
-                    width = cropW;
-                    height = cropH;
-                    Logger.Info($"SKW: Cropped to {width}x{height} (ring pattern + {cropMarginPx}px margin)");
                 }
 
                 ushort[] pixelData = FitsAverager.ToUShort16(accumulated);
@@ -955,6 +963,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 accessor.SetValueInt32(SETTINGS_PREFIX + "SettleSeconds", SettleSeconds);
                 accessor.SetValueBoolean(SETTINGS_PREFIX + "IncludeCenter", IncludeCenter);
                 accessor.SetValueBoolean(SETTINGS_PREFIX + "RunAutofocus", RunAutofocus);
+                accessor.SetValueBoolean(SETTINGS_PREFIX + "CropAfterStack", CropAfterStack);
                 accessor.SetValueBoolean(SETTINGS_PREFIX + "AutoCleanSubFrames", AutoCleanSubFrames);
                 accessor.SetValueString(SETTINGS_PREFIX + "SkyWaveOutputDirectory", skyWaveOutputDirectory);
             } catch (Exception ex) {
@@ -982,6 +991,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 settleSeconds = accessor.GetValueInt32(SETTINGS_PREFIX + "SettleSeconds", settleSeconds);
                 includeCenter = accessor.GetValueBoolean(SETTINGS_PREFIX + "IncludeCenter", includeCenter);
                 runAutofocus = accessor.GetValueBoolean(SETTINGS_PREFIX + "RunAutofocus", runAutofocus);
+                cropAfterStack = accessor.GetValueBoolean(SETTINGS_PREFIX + "CropAfterStack", cropAfterStack);
                 autoCleanSubFrames = accessor.GetValueBoolean(SETTINGS_PREFIX + "AutoCleanSubFrames", autoCleanSubFrames);
                 skyWaveOutputDirectory = accessor.GetValueString(SETTINGS_PREFIX + "SkyWaveOutputDirectory", skyWaveOutputDirectory);
                 Logger.Info($"SKW: Settings loaded — star={starName}, filter={filterName}, dir={skyWaveOutputDirectory}");
