@@ -2,6 +2,19 @@
 
 A [N.I.N.A.](https://nighttime-imaging.eu/) plugin that automates telescope collimation data capture for [InnovationForesight's SkyWave](https://www.innovationsforesight.com/aitelescopecollimation/) AI wavefront analysis.
 
+## Contents
+
+- [Why this exists](#why-this-exists)
+- [What this plugin does differently](#what-this-plugin-does-differently)
+- [How it works](#how-it-works)
+- [Two tools, one workflow](#two-tools-one-workflow)
+  - [NINA Plugin](#nina-plugin--collimation-helper-for-skywave)
+  - [Web Tool (HTML)](#web-tool-html--for-non-nina-users)
+- [Star presets](#star-presets)
+- [Tips](#tips)
+- [Requirements](#requirements)
+- [License](#license)
+
 ## Why this exists
 
 Precise telescope collimation is critical for sharp, aberration-free images — but getting there has always been tedious. The traditional workflow means manually slewing to a star, defocusing, capturing a frame, then repeating at multiple field positions, often juggling between NINA sequences, PixInsight scripts, and manual mount control. Most people give up after a single on-axis star and never detect the field-dependent problems lurking at the edges of their sensor.

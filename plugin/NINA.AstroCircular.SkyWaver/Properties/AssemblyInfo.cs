@@ -40,4 +40,6 @@ using System.Runtime.InteropServices;
 
 By spreading the defocused star across the entire sensor, SkyWave can detect not just on-axis collimation errors but also field-dependent aberrations like tilt, spacing issues, and off-axis coma — something a single centered star image cannot reveal.
 
-Provides both individual sequence instructions (SkwDefocus, SkwCircularCapture, SkwIntegrateFrames) for advanced users and a single SkwCollimationRun container for one-click operation.")]
+Provides both individual sequence instructions (SkwDefocus, SkwCircularCapture, SkwIntegrateFrames) for advanced users and a single SkwCollimationRun container for one-click operation.
+
+If you find this useful, consider buying me a coffee: https://buymeacoffee.com/joergsflow")]

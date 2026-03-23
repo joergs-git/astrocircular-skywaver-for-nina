@@ -7,6 +7,7 @@ using System;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Runtime.CompilerServices;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace NINA.AstroCircular.SkyWaver {
@@ -17,14 +18,24 @@ namespace NINA.AstroCircular.SkyWaver {
 
         public SkwSettings Settings { get; }
         public ICommand BrowseFolderCommand { get; }
+        public ICommand OpenCoffeeCommand { get; }
 
         [ImportingConstructor]
         public AstroCircularSkyWaverPlugin(IProfileService profileService) {
             this.profileService = profileService;
             Settings = new SkwSettings();
             BrowseFolderCommand = new RelayCommand((o) => BrowseFolder());
+            OpenCoffeeCommand = new RelayCommand((o) => OpenUrl("https://buymeacoffee.com/joergsflow"));
 
             try { LoadFromProfile(); } catch { }
+        }
+
+        private void OpenUrl(string url) {
+            try {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            } catch (Exception ex) {
+                Logger.Warning($"SKW: Failed to open URL {url}: {ex.Message}");
+            }
         }
 
         private void BrowseFolder() {
