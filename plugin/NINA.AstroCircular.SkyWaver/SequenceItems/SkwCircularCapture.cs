@@ -27,7 +27,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
     [ExportMetadata("Name", "SKW Circular Capture")]
     [ExportMetadata("Description", "Capture defocused star images at circular ring positions")]
     [ExportMetadata("Icon", "CameraSVG")]
-    [ExportMetadata("Category", "AstroCircular SKW")]
+    [ExportMetadata("Category", "SkyWave Collimation")]
     [Export(typeof(ISequenceItem))]
     [JsonObject(MemberSerialization.OptIn)]
     public class SkwCircularCapture : SequenceItem {
@@ -271,7 +271,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
         }
 
         public override string ToString() {
-            return $"Category: AstroCircular SKW, Item: SkwCircularCapture, Positions: {RingPositions}, Radius: {RadiusPercent}%";
+            return $"Category: SkyWave Collimation, Item: SkwCircularCapture, Positions: {RingPositions}, Radius: {RadiusPercent}%";
         }
     }
 }

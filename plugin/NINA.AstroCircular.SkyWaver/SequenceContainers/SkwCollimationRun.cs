@@ -30,7 +30,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceContainers {
     [ExportMetadata("Name", "SKW Collimation Run")]
     [ExportMetadata("Description", "Complete SkyWave collimation: center, defocus, circular capture, integrate, refocus")]
     [ExportMetadata("Icon", "TelescopeSVG")]
-    [ExportMetadata("Category", "AstroCircular SKW")]
+    [ExportMetadata("Category", "SkyWave Collimation")]
     [Export(typeof(ISequenceItem))]
     [JsonObject(MemberSerialization.OptIn)]
     public class SkwCollimationRun : SequenceItem {
@@ -287,7 +287,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceContainers {
         }
 
         public override string ToString() {
-            return $"Category: AstroCircular SKW, Item: SkwCollimationRun, Star: {StarName}, Positions: {RingPositions}";
+            return $"Category: SkyWave Collimation, Item: SkwCollimationRun, Star: {StarName}, Positions: {RingPositions}";
         }
     }
 }

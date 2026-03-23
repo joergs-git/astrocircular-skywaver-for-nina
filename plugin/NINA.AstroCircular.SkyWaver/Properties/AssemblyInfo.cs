@@ -2,10 +2,10 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 // General Information
-[assembly: AssemblyTitle("AstroCircular SkyWaver")]
-[assembly: AssemblyDescription("Automated SkyWave (SKW) telescope collimation for N.I.N.A. — circular defocused star pattern capture, native frame integration, and SkyWave-ready FITS output.")]
+[assembly: AssemblyTitle("Collimation Helper for SkyWave")]
+[assembly: AssemblyDescription("Automated telescope collimation helper for InnovationForesight's SkyWave — circular defocused star pattern capture across the full sensor plane, native frame integration, and wavefront-ready FITS output.")]
 [assembly: AssemblyCompany("joergsflow")]
-[assembly: AssemblyProduct("AstroCircular SkyWaver for N.I.N.A.")]
+[assembly: AssemblyProduct("Collimation Helper for SkyWave")]
 [assembly: AssemblyCopyright("Copyright © joergsflow 2026")]
 
 // COM visibility
@@ -24,19 +24,20 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("LicenseURL", "https://www.gnu.org/licenses/gpl-3.0.html")]
 [assembly: AssemblyMetadata("Repository", "https://github.com/joergs-git/astrocircular-skywaver-for-nina")]
 [assembly: AssemblyMetadata("Homepage", "https://joergs-git.github.io/astrocircular-skywaver-for-nina/")]
-[assembly: AssemblyMetadata("Tags", "Collimation,SkyWave,SKW,Wavefront,Defocus,Optics")]
-[assembly: AssemblyMetadata("ShortDescription", "Automated SkyWave collimation — circular pattern capture & native FITS integration")]
+[assembly: AssemblyMetadata("Tags", "Collimation,SkyWave,SKW,Wavefront,Defocus,Optics,Tilt")]
+[assembly: AssemblyMetadata("ShortDescription", "Automated SkyWave collimation helper — circular defocused star capture & native FITS integration")]
 [assembly: AssemblyMetadata("LongDescription",
-@"AstroCircular SkyWaver automates the complete SkyWave (SKW) telescope collimation workflow inside N.I.N.A.:
+@"Collimation Helper for SkyWave automates the complete telescope collimation data-capture workflow inside N.I.N.A., producing wavefront-ready FITS images for InnovationForesight's SkyWave AI analysis:
 
-1. Select a bright, isolated star (from presets or manual RA/Dec)
+1. Select a bright, isolated star (from 16 presets or manual RA/Dec)
 2. Plate-solve and center on the star (in focus)
-3. Defocus the telescope by a configurable number of focuser steps
-4. Capture exposures at N positions around a circular pattern
-5. Natively integrate sub-frames (average, crop, bin 2×) into a single FITS
-6. Save the SkyWave-ready FITS to your configured watch folder
-7. Return the focuser to its original position
+3. Switch to the target filter and optionally run autofocus
+4. Defocus the telescope by a configurable number of focuser steps
+5. Capture exposures at N positions around a circular ring pattern covering the full sensor plane
+6. Natively integrate sub-frames (average, crop, bin 2x) into a single FITS
+7. Save the SkyWave-ready FITS to your configured watch folder
+8. Return the focuser to its original position
 
-No external tools required — replaces the manual workflow of generating NINA sequences and running PixInsight scripts.
+By spreading the defocused star across the entire sensor, SkyWave can detect not just on-axis collimation errors but also field-dependent aberrations like tilt, spacing issues, and off-axis coma — something a single centered star image cannot reveal.
 
 Provides both individual sequence instructions (SkwDefocus, SkwCircularCapture, SkwIntegrateFrames) for advanced users and a single SkwCollimationRun container for one-click operation.")]

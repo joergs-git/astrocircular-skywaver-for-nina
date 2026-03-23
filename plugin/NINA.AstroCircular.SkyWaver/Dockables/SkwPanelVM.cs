@@ -70,7 +70,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             this.domeFollower = domeFollower;
             this.autoFocusVMFactory = autoFocusVMFactory;
 
-            Title = "SkyWave Collimator Helper";
+            Title = "Collimation Helper for SkyWave";
 
             // Icon
             try {

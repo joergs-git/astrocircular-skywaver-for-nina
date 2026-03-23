@@ -42,7 +42,7 @@ namespace NINA.AstroCircular.SkyWaver.Imaging {
                 { "EXPTIME",  exposureSeconds },
                 { "CCD-TEMP", ccdTemp },
                 { "FILTER",   filterName },
-                { "COMMENT",  "AstroCircular SkyWaver Collimation Integrated Frame" }
+                { "COMMENT",  "Collimation Helper for SkyWave — Integrated Frame" }
             };
         }
     }

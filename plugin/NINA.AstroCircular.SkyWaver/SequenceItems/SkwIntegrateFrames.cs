@@ -21,7 +21,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
     [ExportMetadata("Name", "SKW Integrate Frames")]
     [ExportMetadata("Description", "Average sub-frames and produce SkyWave-ready FITS output")]
     [ExportMetadata("Icon", "SettingsSVG")]
-    [ExportMetadata("Category", "AstroCircular SKW")]
+    [ExportMetadata("Category", "SkyWave Collimation")]
     [Export(typeof(ISequenceItem))]
     [JsonObject(MemberSerialization.OptIn)]
     public class SkwIntegrateFrames : SequenceItem {
@@ -180,7 +180,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
         }
 
         public override string ToString() {
-            return $"Category: AstroCircular SKW, Item: SkwIntegrateFrames, Crop: {CropToCircle}, Bin2: {BinToHalf}";
+            return $"Category: SkyWave Collimation, Item: SkwIntegrateFrames, Crop: {CropToCircle}, Bin2: {BinToHalf}";
         }
     }
 }

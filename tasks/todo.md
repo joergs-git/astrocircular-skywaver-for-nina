@@ -1,4 +1,4 @@
-# AstroCircular SkyWaver — TODO
+# Collimation Helper for SkyWave — TODO
 
 ## Completed
 - [x] Review HTML tool for correctness and NINA format compatibility

@@ -16,7 +16,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
     [ExportMetadata("Name", "SKW Defocus")]
     [ExportMetadata("Description", "Move focuser by N steps for SkyWave collimation")]
     [ExportMetadata("Icon", "FocusSVG")]
-    [ExportMetadata("Category", "AstroCircular SKW")]
+    [ExportMetadata("Category", "SkyWave Collimation")]
     [Export(typeof(ISequenceItem))]
     [JsonObject(MemberSerialization.OptIn)]
     public class SkwDefocus : SequenceItem {
@@ -72,7 +72,7 @@ namespace NINA.AstroCircular.SkyWaver.SequenceItems {
         }
 
         public override string ToString() {
-            return $"Category: AstroCircular SKW, Item: SkwDefocus, Steps: {DefocusSteps}, Direction: {DirectionLabel}";
+            return $"Category: SkyWave Collimation, Item: SkwDefocus, Steps: {DefocusSteps}, Direction: {DirectionLabel}";
         }
     }
 }

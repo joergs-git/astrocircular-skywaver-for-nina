@@ -39,28 +39,28 @@ jobs:
       - name: Package installer zip
         shell: pwsh
         run: |
-          $stagingDir = "staging/AstroCircular.SkyWaver"
+          $stagingDir = "staging/CollimationHelper.SkyWave"
           New-Item -ItemType Directory -Force -Path $stagingDir
-          Copy-Item "NINA.AstroCircular.SkyWaver/bin/x64/Release/NINA.AstroCircular.SkyWaver.dll" $stagingDir
+          Copy-Item "NINA.AstroCircular.SkyWaver/bin/x64/Release/NINA.CollimationHelper.SkyWave.dll" $stagingDir
           Copy-Item "install.bat" "staging/"
           Copy-Item "uninstall.bat" "staging/"
           @"
-          AstroCircular SkyWaver for N.I.N.A. — v0.2.0
-          ==============================================
+          Collimation Helper for SkyWave — v0.2.0
+          ========================================
 
           INSTALL:  Double-click install.bat (close NINA first!)
-          MANUAL:   Copy the AstroCircular.SkyWaver folder to
+          MANUAL:   Copy the CollimationHelper.SkyWave folder to
                     %localappdata%\NINA\3\Plugins\
 
           UNINSTALL: Double-click uninstall.bat
 
           After installing, restart N.I.N.A. and find the
-          SKW Collimation panel in the tool windows.
-          Settings in Options > Plugins > AstroCircular SkyWaver.
+          Collimation Helper for SkyWave panel in the tool windows.
+          Settings in Options > Plugins > Collimation Helper for SkyWave.
 
           https://github.com/joergs-git/astrocircular-skywaver-for-nina
           "@ | Out-File -Encoding utf8 "staging/README.txt"
-          Compress-Archive -Path "staging/*" -DestinationPath "AstroCircular.SkyWaver-v0.2.0.zip" -Force
+          Compress-Archive -Path "staging/*" -DestinationPath "CollimationHelper.SkyWave-v0.2.0.zip" -Force
 
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
@@ -69,19 +69,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "v0.2.0-build.${{ github.run_number }}"
-          $title = "AstroCircular SkyWaver v0.2.0 (build ${{ github.run_number }})"
+          $title = "Collimation Helper for SkyWave v0.2.0 (build ${{ github.run_number }})"
           $notes = @"
-          ## AstroCircular SkyWaver for N.I.N.A. — v0.2.0
+          ## Collimation Helper for SkyWave — v0.2.0
 
           Native NINA plugin for automated SkyWave telescope collimation.
 
           ### Install
-          1. Download ``AstroCircular.SkyWaver-v0.2.0.zip`` below
+          1. Download ``CollimationHelper.SkyWave-v0.2.0.zip`` below
           2. Unzip and double-click ``install.bat``
           3. Restart N.I.N.A.
 
           ### Usage
-          - Open NINA > find **SKW Collimation** panel in the tool windows
+          - Open NINA > find **Collimation Helper for SkyWave** panel in the tool windows
           - Select a star, configure parameters, click **Run Collimation**
           - Plugin controls mount, focuser, and camera directly
           - Integrated FITS saved to your SkyWave watch folder
@@ -94,4 +94,4 @@ jobs:
               gh release delete $_ --repo $env:GITHUB_REPOSITORY --yes --cleanup-tag 2>$null
             }
           }
-          gh release create $tag "AstroCircular.SkyWaver-v0.2.0.zip" --repo $env:GITHUB_REPOSITORY --title $title --notes $notes --prerelease
+          gh release create $tag "CollimationHelper.SkyWave-v0.2.0.zip" --repo $env:GITHUB_REPOSITORY --title $title --notes $notes --prerelease
