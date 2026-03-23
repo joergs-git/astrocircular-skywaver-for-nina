@@ -72,14 +72,16 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
 
             Title = "Collimation Helper for SkyWave";
 
-            // Icon
+            // Icon — must use full pack URI (same format as ResourceDictionary.xaml.cs)
             try {
                 var dict = new ResourceDictionary();
-                dict.Source = new Uri("NINA.CollimationHelper.SkyWave;component/Resources/Icons.xaml", UriKind.RelativeOrAbsolute);
-                ImageGeometry = (GeometryGroup)dict["SkwPanelIconSVG"];
-                ImageGeometry.Freeze();
-            } catch {
-                // Default puzzle piece icon if icon load fails
+                dict.Source = new Uri("pack://application:,,,/NINA.CollimationHelper.SkyWave;component/Resources/Icons.xaml");
+                var geo = (GeometryGroup)dict["SkwPanelIconSVG"];
+                geo.Freeze();
+                ImageGeometry = geo;
+                Logger.Info("SKW: Plugin icon loaded successfully");
+            } catch (Exception ex) {
+                Logger.Warning($"SKW: Failed to load plugin icon: {ex.Message}");
             }
 
             // Commands
@@ -90,6 +92,9 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
 
             // Load settings
             LoadSettings();
+
+            // Populate filter dropdown from connected filter wheel
+            RefreshAvailableFilters();
 
             // Try to populate from NINA profile
             LoadFromProfile();
@@ -175,10 +180,33 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             set { exposureTime = value; RaisePropertyChanged(); SaveSettings(); }
         }
 
-        private string filterName = "R";
+        private string filterName = "Default";
         public string FilterName {
             get => filterName;
             set { filterName = value; RaisePropertyChanged(); SaveSettings(); }
+        }
+
+        /// <summary>Filter names from the connected filter wheel, plus "Default" (= active filter).</summary>
+        private ObservableCollection<string> availableFilters = new ObservableCollection<string> { "Default" };
+        public ObservableCollection<string> AvailableFilters {
+            get => availableFilters;
+            set { availableFilters = value; RaisePropertyChanged(); }
+        }
+
+        /// <summary>Refreshes the filter dropdown from the NINA profile filter wheel settings.</summary>
+        private void RefreshAvailableFilters() {
+            var filters = new ObservableCollection<string> { "Default" };
+            var profileFilters = profileService?.ActiveProfile?.FilterWheelSettings?.FilterWheelFilters;
+            if (profileFilters != null) {
+                foreach (var f in profileFilters) {
+                    if (!string.IsNullOrWhiteSpace(f.Name)) filters.Add(f.Name);
+                }
+            }
+            AvailableFilters = filters;
+            // Ensure current selection is still valid
+            if (!filters.Contains(filterName)) {
+                FilterName = "Default";
+            }
         }
 
         private int gain = 100;
@@ -223,14 +251,6 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
         public bool IncludeCenter {
             get => includeCenter;
             set { includeCenter = value; RaisePropertyChanged(); SaveSettings(); RebuildMap(); }
-        }
-
-        // ── Slow Mode (plate-solve every position) ──
-
-        private bool slowMode = false;
-        public bool SlowMode {
-            get => slowMode;
-            set { slowMode = value; RaisePropertyChanged(); SaveSettings(); }
         }
 
         // ── Integration ──
@@ -512,10 +532,24 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             }
         }
 
-        // ── Filter Switch Helper ──
+        // ── Filter Helpers ──
+
+        /// <summary>Returns the actual filter name, resolving "Default" to the currently active filter.</summary>
+        private string ResolveFilterName(string name) {
+            if (string.Equals(name, "Default", StringComparison.OrdinalIgnoreCase)) {
+                var info = filterWheelMediator.GetInfo();
+                if (info?.Connected == true && !string.IsNullOrWhiteSpace(info.SelectedFilter?.Name))
+                    return info.SelectedFilter.Name;
+                return "L"; // fallback if no filter wheel info available
+            }
+            return name;
+        }
 
         private async Task SwitchFilter(string name, CancellationToken ct) {
             try {
+                // "Default" means keep the currently active filter — no switch needed
+                if (string.Equals(name, "Default", StringComparison.OrdinalIgnoreCase)) return;
+
                 var profileFilters = profileService?.ActiveProfile?.FilterWheelSettings?.FilterWheelFilters;
                 FilterInfo target = null;
                 if (profileFilters != null) {
@@ -630,7 +664,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                     StatusText = "Running autofocus...";
                     Progress = 17;
                     var af = autoFocusVMFactory.Create();
-                    var afFilter = new FilterInfo(FilterName, 0, (short)0);
+                    var afFilter = new FilterInfo(ResolveFilterName(FilterName), 0, (short)0);
                     await af.StartAutoFocus(afFilter, ct, progressReporter);
                     Logger.Info("SKW: Autofocus completed before defocus");
                     StatusText = "Autofocus complete";
@@ -656,7 +690,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 // Build the visual map
                 BuildMapPositions();
 
-                Logger.Info($"SKW: Starting capture loop — {total} positions, slowMode={SlowMode}, subFrameDir={subFrameDir}");
+                Logger.Info($"SKW: Starting capture loop — {total} positions, subFrameDir={subFrameDir}");
 
                 for (int i = 0; i < total; i++) {
                     ct.ThrowIfCancellationRequested();
@@ -674,48 +708,14 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                         Angle.ByDegree(pos.DecDegrees),
                         Epoch.J2000);
 
-                    if (SlowMode) {
-                        // SLOW MODE: refocus → L filter → slew & center → defocus → target filter → expose
-                        try {
-                            StatusText = $"Slow: Refocusing for {pos.Label} ({i + 1}/{total})...";
-                            await focuserMediator.MoveFocuserRelative(-relativeDefocus, ct);
-
-                            StatusText = $"Slow: L filter for plate-solve...";
-                            await SwitchFilter("L", ct);
-
-                            StatusText = $"Slow: Centering on {pos.Label} (plate-solve)...";
-                            try {
-                                var centerInst = new Center(
-                                    profileService, telescopeMediator, imagingMediator, filterWheelMediator,
-                                    guiderMediator, domeMediator, domeFollower,
-                                    new PlateSolverFactoryProxy(), new NINA.Core.Utility.WindowService.WindowServiceFactory()
-                                ) { Coordinates = new NINA.Astrometry.InputCoordinates(posCoords) };
-                                await centerInst.Execute(progressReporter, ct);
-                            } catch {
-                                StatusText = $"Slow: Plate-solve failed, blind slew to {pos.Label}...";
-                                await telescopeMediator.SlewToCoordinatesAsync(posCoords, ct);
-                            }
-
-                            StatusText = $"Slow: Defocusing...";
-                            await focuserMediator.MoveFocuserRelative(relativeDefocus, ct);
-
-                            StatusText = $"Slow: Switching to {FilterName}...";
-                            await SwitchFilter(FilterName, ct);
-                        } catch (Exception ex) {
-                            Logger.Warning($"SKW: Slow-mode prep for {pos.Label} failed: {ex.Message}");
-                            if (i < MapPositions.Count) MapPositions[i].State = PositionState.Failed;
-                            continue;
-                        }
-                    } else {
-                        // NORMAL MODE: blind slew (telescope is defocused)
-                        StatusText = $"Slewing to {pos.Label} ({i + 1}/{total})...";
-                        try {
-                            await telescopeMediator.SlewToCoordinatesAsync(posCoords, ct);
-                        } catch {
-                            StatusText = $"Slew to {pos.Label} failed, skipping...";
-                            if (i < MapPositions.Count) MapPositions[i].State = PositionState.Failed;
-                            continue;
-                        }
+                    // Blind slew — telescope stays defocused, positions are intentionally off-center
+                    StatusText = $"Slewing to {pos.Label} ({i + 1}/{total})...";
+                    try {
+                        await telescopeMediator.SlewToCoordinatesAsync(posCoords, ct);
+                    } catch {
+                        StatusText = $"Slew to {pos.Label} failed, skipping...";
+                        if (i < MapPositions.Count) MapPositions[i].State = PositionState.Failed;
+                        continue;
                     }
 
                     // Settle
@@ -729,7 +729,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                         var captureSeq = new CaptureSequence(
                             ExposureTime,
                             CaptureSequence.ImageTypes.LIGHT,
-                            new FilterInfo(FilterName, 0, (short)0),
+                            new FilterInfo(ResolveFilterName(FilterName), 0, (short)0),
                             new BinningMode((short)Binning, (short)Binning),
                             1) {
                             Gain = Gain,
@@ -913,7 +913,6 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 accessor.SetValueBoolean(SETTINGS_PREFIX + "CropToCircle", CropToCircle);
                 accessor.SetValueBoolean(SETTINGS_PREFIX + "BinToHalf", BinToHalf);
                 accessor.SetValueBoolean(SETTINGS_PREFIX + "AutoCleanSubFrames", AutoCleanSubFrames);
-                accessor.SetValueBoolean(SETTINGS_PREFIX + "SlowMode", SlowMode);
                 accessor.SetValueString(SETTINGS_PREFIX + "SkyWaveOutputDirectory", skyWaveOutputDirectory);
             } catch (Exception ex) {
                 Logger.Warning($"SKW: Failed to save settings: {ex.Message}");
@@ -942,7 +941,6 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 cropToCircle = accessor.GetValueBoolean(SETTINGS_PREFIX + "CropToCircle", cropToCircle);
                 binToHalf = accessor.GetValueBoolean(SETTINGS_PREFIX + "BinToHalf", binToHalf);
                 autoCleanSubFrames = accessor.GetValueBoolean(SETTINGS_PREFIX + "AutoCleanSubFrames", autoCleanSubFrames);
-                slowMode = accessor.GetValueBoolean(SETTINGS_PREFIX + "SlowMode", slowMode);
                 skyWaveOutputDirectory = accessor.GetValueString(SETTINGS_PREFIX + "SkyWaveOutputDirectory", skyWaveOutputDirectory);
                 Logger.Info($"SKW: Settings loaded — star={starName}, filter={filterName}, dir={skyWaveOutputDirectory}");
             } catch (Exception ex) {

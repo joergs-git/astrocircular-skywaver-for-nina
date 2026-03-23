@@ -20,7 +20,7 @@
 - [x] v0.2.0: Camera preview with auto-stretch
 - [x] v0.2.0: Plate-solve centering (L filter) for first slew
 - [x] v0.2.0: Target filter switch after defocus
-- [x] v0.2.0: Slow mode — plate-solve every position for inaccurate mounts
+- [x] v0.2.0: ~~Slow mode~~ removed — slew-and-center makes no sense for off-center ring positions
 - [x] v0.2.0: Self-contained FITS pipeline (RawFitsWriter/Reader, no NINA format dependency)
 - [x] v0.2.0: Rectangular crop (no circular masking)
 - [x] v0.2.0: All toggles in dockable panel with visible labels
@@ -39,7 +39,7 @@
 - [ ] **PixInsight Tools integration** — Optional integration path using
   isbeorn's PixInsight Tools plugin for stacking
 - [ ] **Verify output files** — Confirm integrated FITS loads correctly in SkyWave
-- [ ] **Test slow mode** end-to-end with real equipment
+- [x] ~~Test slow mode~~ — removed, not applicable (ring positions are intentionally off-center)
 
 ## Open — HTML Tool Fixes
 - [ ] Fix TakeExposure.ExposureCount: 0 → 1 in generated NINA JSON

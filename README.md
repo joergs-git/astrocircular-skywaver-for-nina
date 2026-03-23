@@ -61,7 +61,6 @@ A native N.I.N.A. plugin that does everything inside NINA — no external tools 
 - **Native FITS integration** — simple pixel average, no alignment, no rejection, no normalization
 - **Optional autofocus** before defocusing — works with any AF provider
 - **All settings persist** between NINA sessions
-- **Slow mode** for inaccurate mounts — plate-solves every position
 
 #### Installation
 
@@ -105,7 +104,6 @@ See the full list of 16 presets in the [web tool](https://joergs-git.github.io/S
 
 - **Camera rotation:** Set your camera to 0° or 180° rotation to avoid confusion with mirrored orientation in the integrated image. Since we capture in a circle, rotation doesn't affect collimation quality — it just makes visual interpretation easier.
 - **Center position first:** The plugin always captures the center star position first (if enabled), then the ring positions. This matches SkyWave's expectation for field-dependent analysis.
-- **Slow mode:** Enable this if your mount is not accurate enough for blind slewing. In slow mode, the plugin refocuses and plate-solves at every single ring position — much slower but ensures precise positioning. The workflow per position is: refocus → L filter → slew & center (plate-solve) → defocus → target filter → expose. Default is off (blind slew after initial centering).
 - **Integration:** The integration is a simple pixel-by-pixel average — no alignment, no rejection, no normalization, no weighting. This is by design: each frame shows the defocused star at a different field position, and SkyWave needs the raw combined pattern.
 - **Output format:** Always 16-bit unsigned FITS with proper headers (FOCALLEN, XPIXSZ, XBINNING, etc.). Never XISF — regardless of NINA's default format setting.
 - **Sub-frames:** When "Auto-delete subs" is off, individual frames are kept in a `subframes_*` subfolder inside your output directory.

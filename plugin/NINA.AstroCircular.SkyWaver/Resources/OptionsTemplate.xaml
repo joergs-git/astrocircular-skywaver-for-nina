@@ -6,7 +6,7 @@
         <StackPanel Orientation="Vertical" MaxWidth="640" Margin="5">
 
             <!-- Note about output folder -->
-            <TextBlock Text="Output folder and slow mode are configured in the SKW Collimation panel (Imaging tab)."
+            <TextBlock Text="Output folder is configured in the SKW Collimation panel (Imaging tab)."
                        Foreground="#888" FontSize="10" Margin="0,0,0,6" FontStyle="Italic" />
 
             <!-- Post-Capture Integration -->
