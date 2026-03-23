@@ -33,7 +33,7 @@ The plugin handles everything automatically — slew, center, filter change, opt
 8. **Save** a 16-bit monochrome FITS to your configured output folder
 9. **Refocus** — always returns the focuser, even on failure
 
-<img width="1182" height="719" alt="Collimation Helper for SkyWave" src="https://github.com/joergs-git/astrocircular-skywaver-for-nina/blob/main/astrocirular-skw-nina-helper.png" />
+<img width="1182" height="719" alt="Collimation Helper for SkyWave" src="https://github.com/joergs-git/SkyWave-Collimation-Helper-for-NINA/blob/main/astrocirular-skw-nina-helper.png" />
 
 ## Two tools, one workflow
 
@@ -52,7 +52,7 @@ A native N.I.N.A. plugin that does everything inside NINA — no external tools 
 
 #### Installation
 
-1. Download the zip from [Releases](https://github.com/joergs-git/astrocircular-skywaver-for-nina/releases)
+1. Download the zip from [Releases](https://github.com/joergs-git/SkyWave-Collimation-Helper-for-NINA/releases)
 2. Unzip and double-click `install.bat` (close NINA first)
 3. Restart N.I.N.A. — find **Collimation Helper for SkyWave** in the tool panels
 
@@ -69,7 +69,7 @@ A native N.I.N.A. plugin that does everything inside NINA — no external tools 
 
 A standalone browser-based tool that generates N.I.N.A. sequence files and PixInsight scripts. This tool remains available for users who prefer to build their own sequences or don't use the plugin:
 
-- **[Live demo](https://joergs-git.github.io/astrocircular-skywaver-for-nina/)** — runs entirely in your browser
+- **[Live demo](https://joergs-git.github.io/SkyWave-Collimation-Helper-for-NINA/)** — runs entirely in your browser
 - Generates downloadable `.json` for N.I.N.A. Advanced Sequencer
 - Generates downloadable `.js` PixInsight integration script
 - Star finder with altitude/LST calculator
@@ -86,7 +86,7 @@ A standalone browser-based tool that generates N.I.N.A. sequence files and PixIn
 | ξ Cep | 22:03:47.5 | +64:37:41 | 4.29 | Fall | Away from Milky Way |
 | α Cam | 04:54:03.0 | +66:20:34 | 4.29 | Winter | Recommended! Sparsest field in the sky |
 
-See the full list of 16 presets in the [web tool](https://joergs-git.github.io/astrocircular-skywaver-for-nina/).
+See the full list of 16 presets in the [web tool](https://joergs-git.github.io/SkyWave-Collimation-Helper-for-NINA/).
 
 ## Tips
 

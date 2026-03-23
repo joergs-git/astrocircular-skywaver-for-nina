@@ -58,7 +58,7 @@ jobs:
           Collimation Helper for SkyWave panel in the tool windows.
           Settings in Options > Plugins > Collimation Helper for SkyWave.
 
-          https://github.com/joergs-git/astrocircular-skywaver-for-nina
+          https://github.com/joergs-git/SkyWave-Collimation-Helper-for-NINA
           "@ | Out-File -Encoding utf8 "staging/README.txt"
           Compress-Archive -Path "staging/*" -DestinationPath "CollimationHelper.SkyWave-v0.2.0.zip" -Force
 
@@ -86,7 +86,7 @@ jobs:
           - Plugin controls mount, focuser, and camera directly
           - Integrated FITS saved to your SkyWave watch folder
 
-          > Early development build — report issues at https://github.com/joergs-git/astrocircular-skywaver-for-nina/issues
+          > Early development build — report issues at https://github.com/joergs-git/SkyWave-Collimation-Helper-for-NINA/issues
           "@
           # Delete previous pre-release with same base version if exists
           gh release list --repo $env:GITHUB_REPOSITORY --limit 10 --json tagName --jq '.[].tagName' | ForEach-Object {

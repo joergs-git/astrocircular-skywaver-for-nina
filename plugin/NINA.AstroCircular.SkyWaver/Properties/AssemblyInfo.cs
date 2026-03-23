@@ -22,8 +22,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("MinimumApplicationVersion", "3.0.0.9001")]
 [assembly: AssemblyMetadata("License", "GPL-3.0")]
 [assembly: AssemblyMetadata("LicenseURL", "https://www.gnu.org/licenses/gpl-3.0.html")]
-[assembly: AssemblyMetadata("Repository", "https://github.com/joergs-git/astrocircular-skywaver-for-nina")]
-[assembly: AssemblyMetadata("Homepage", "https://joergs-git.github.io/astrocircular-skywaver-for-nina/")]
+[assembly: AssemblyMetadata("Repository", "https://github.com/joergs-git/SkyWave-Collimation-Helper-for-NINA")]
+[assembly: AssemblyMetadata("Homepage", "https://joergs-git.github.io/SkyWave-Collimation-Helper-for-NINA/")]
 [assembly: AssemblyMetadata("Tags", "Collimation,SkyWave,SKW,Wavefront,Defocus,Optics,Tilt")]
 [assembly: AssemblyMetadata("ShortDescription", "Automated SkyWave collimation helper — circular defocused star capture & native FITS integration")]
 [assembly: AssemblyMetadata("LongDescription",
