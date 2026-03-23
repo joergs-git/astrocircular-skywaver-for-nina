@@ -73,10 +73,14 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             Title = "Collimation Helper for SkyWave";
 
             // Icon — load from DockableTemplates.xaml using PathGeometry (same pattern as InjectAutofocus)
-            var dict = new ResourceDictionary();
-            dict.Source = new Uri("NINA.CollimationHelper.SkyWave;component/Dockables/DockableTemplates.xaml", UriKind.RelativeOrAbsolute);
-            ImageGeometry = (System.Windows.Media.GeometryGroup)dict["SkwCollimationSVG"];
-            ImageGeometry.Freeze();
+            try {
+                var dict = new ResourceDictionary();
+                dict.Source = new Uri("NINA.CollimationHelper.SkyWave;component/Dockables/DockableTemplates.xaml", UriKind.RelativeOrAbsolute);
+                ImageGeometry = (System.Windows.Media.GeometryGroup)dict["SkwCollimationSVG"];
+                ImageGeometry.Freeze();
+            } catch (Exception ex) {
+                Logger.Warning($"SKW: Icon load failed (non-critical): {ex.Message}");
+            }
 
             // Commands
             RunCommand = new AsyncCommand<bool>(RunCollimation, (o) => !IsRunning);
@@ -84,14 +88,18 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             BrowseFolderCommand = new RelayCommand((o) => BrowseFolder());
             FindBestStarCommand = new RelayCommand((o) => FindBestStar());
 
-            // Load settings
-            LoadSettings();
+            // Load settings — safe even without devices
+            try { LoadSettings(); } catch (Exception ex) {
+                Logger.Warning($"SKW: Settings load failed (non-critical): {ex.Message}");
+            }
 
-            // Populate filter dropdown from connected filter wheel
-            RefreshAvailableFilters();
+            // Populate filter dropdown — devices may not be connected yet
+            try { RefreshAvailableFilters(); } catch (Exception ex) {
+                Logger.Warning($"SKW: Filter list refresh failed (non-critical): {ex.Message}");
+            }
 
             // Try to populate from NINA profile
-            LoadFromProfile();
+            try { LoadFromProfile(); } catch { }
 
             // Build initial map
             try { BuildMapPositions(); } catch { }
