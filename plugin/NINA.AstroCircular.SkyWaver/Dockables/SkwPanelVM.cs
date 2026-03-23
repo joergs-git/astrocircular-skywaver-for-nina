@@ -238,7 +238,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
         private int radiusPercent = 80;
         public int RadiusPercent {
             get => radiusPercent;
-            set { radiusPercent = value; RaisePropertyChanged(); SaveSettings(); RebuildMap(); }
+            set { radiusPercent = Math.Max(10, Math.Min(85, value)); RaisePropertyChanged(); SaveSettings(); RebuildMap(); }
         }
 
         private int settleSeconds = 3;
