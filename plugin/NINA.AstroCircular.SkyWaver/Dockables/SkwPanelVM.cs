@@ -599,6 +599,8 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
 
             int originalFocuserPos = focuserMediator.GetInfo().Position;
             int relativeDefocus = DefocusSteps * DefocusDirection;
+            bool hasDefocused = false; // Track whether defocus actually happened
+            string originalFilter = null; // Track filter before we switch to L
             string outputDir = SkyWaveOutputDirectory;
             string sessionId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             string subFrameDir = Path.Combine(outputDir, "subframes_" + sessionId);
@@ -616,6 +618,10 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 // Step 1: Switch to L filter for plate-solve centering (best SNR for solving)
                 StatusText = "Switching to L filter for plate-solve...";
                 Progress = 3;
+                // Remember current filter so we can restore it on cancel
+                var fwInfo = filterWheelMediator.GetInfo();
+                if (fwInfo?.Connected == true && fwInfo.SelectedFilter != null)
+                    originalFilter = fwInfo.SelectedFilter.Name;
                 await SwitchFilter("L", ct);
 
                 // Step 2: Slew & Center on target star (plate-solve, in focus, L filter)
@@ -668,6 +674,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 StatusText = $"Defocusing {(relativeDefocus > 0 ? "+" : "")}{relativeDefocus} steps...";
                 Progress = 18;
                 await focuserMediator.MoveFocuserRelative(relativeDefocus, ct);
+                hasDefocused = true;
 
                 // Step 5: Compute positions and capture
                 var (fovW, fovH) = CircularPatternCalculator.ComputeFOV(sensorW, sensorH, fl);
@@ -869,12 +876,24 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 Logger.Error($"SKW Collimation failed: {ex}");
                 return false;
             } finally {
-                // ALWAYS refocus
-                try {
-                    StatusText = IsRunning ? $"Refocusing to position {originalFocuserPos}..." : StatusText;
-                    await focuserMediator.MoveFocuserRelative(-relativeDefocus, CancellationToken.None);
-                } catch (Exception ex) {
-                    Logger.Error($"SKW: Refocus failed! Original position was {originalFocuserPos}: {ex.Message}");
+                // Restore focuser — only undo defocus if it actually happened
+                if (hasDefocused) {
+                    try {
+                        StatusText = $"Refocusing to original position...";
+                        await focuserMediator.MoveFocuserRelative(-relativeDefocus, CancellationToken.None);
+                        Logger.Info($"SKW: Focuser restored (moved {-relativeDefocus} steps back)");
+                    } catch (Exception ex) {
+                        Logger.Error($"SKW: Refocus failed! Original position was {originalFocuserPos}: {ex.Message}");
+                    }
+                }
+                // Restore original filter if we switched away from it
+                if (originalFilter != null) {
+                    try {
+                        await SwitchFilter(originalFilter, CancellationToken.None);
+                        Logger.Info($"SKW: Filter restored to {originalFilter}");
+                    } catch (Exception ex) {
+                        Logger.Warning($"SKW: Filter restore to '{originalFilter}' failed: {ex.Message}");
+                    }
                 }
                 IsRunning = false;
                 runCts?.Dispose();
