@@ -27,13 +27,11 @@ namespace NINA.AstroCircular.SkyWaver.Imaging {
             double ccdTemp,
             string filterName) {
 
-            // Effective pixel size: physical * camera binning
-            double effectivePixelSize = pixelSizeUm * binning;
-
+            // XPIXSZ = physical (unbinned) pixel size — SkyWave uses XBINNING to compute effective size
             return new Dictionary<string, object> {
                 { "FOCALLEN", focalLengthMm },
-                { "XPIXSZ",  effectivePixelSize },
-                { "YPIXSZ",  effectivePixelSize },
+                { "XPIXSZ",  pixelSizeUm },
+                { "YPIXSZ",  pixelSizeUm },
                 { "XBINNING", binning },
                 { "YBINNING", binning },
                 { "EXPTIME",  exposureSeconds },
