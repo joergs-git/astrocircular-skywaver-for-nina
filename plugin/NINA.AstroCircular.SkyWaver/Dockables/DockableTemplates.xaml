@@ -3,6 +3,17 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <!-- Plugin icon: 3 concentric rings + center dot (collimation target) -->
+    <GeometryGroup x:Key="SkwCollimationSVG" FillRule="EvenOdd">
+        <PathGeometry Figures="M 1.5,16 A 14.5,14.5 0 1 1 30.5,16 A 14.5,14.5 0 1 1 1.5,16 Z" />
+        <PathGeometry Figures="M 2.8,16 A 13.2,13.2 0 1 1 29.2,16 A 13.2,13.2 0 1 1 2.8,16 Z" />
+        <PathGeometry Figures="M 6.5,16 A 9.5,9.5 0 1 1 25.5,16 A 9.5,9.5 0 1 1 6.5,16 Z" />
+        <PathGeometry Figures="M 7.8,16 A 8.2,8.2 0 1 1 24.2,16 A 8.2,8.2 0 1 1 7.8,16 Z" />
+        <PathGeometry Figures="M 11,16 A 5,5 0 1 1 21,16 A 5,5 0 1 1 11,16 Z" />
+        <PathGeometry Figures="M 12.3,16 A 3.7,3.7 0 1 1 19.7,16 A 3.7,3.7 0 1 1 12.3,16 Z" />
+        <PathGeometry Figures="M 14.8,16 A 1.2,1.2 0 1 1 17.2,16 A 1.2,1.2 0 1 1 14.8,16 Z" />
+    </GeometryGroup>
+
     <DataTemplate x:Key="NINA.AstroCircular.SkyWaver.Dockables.SkwPanelVM_Dockable">
         <StackPanel Margin="5">
 

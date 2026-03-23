@@ -72,6 +72,12 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
 
             Title = "Collimation Helper for SkyWave";
 
+            // Icon — load from DockableTemplates.xaml using PathGeometry (same pattern as InjectAutofocus)
+            var dict = new ResourceDictionary();
+            dict.Source = new Uri("NINA.CollimationHelper.SkyWave;component/Dockables/DockableTemplates.xaml", UriKind.RelativeOrAbsolute);
+            ImageGeometry = (System.Windows.Media.GeometryGroup)dict["SkwCollimationSVG"];
+            ImageGeometry.Freeze();
+
             // Commands
             RunCommand = new AsyncCommand<bool>(RunCollimation, (o) => !IsRunning);
             CancelCommand = new RelayCommand((o) => Cancel());
