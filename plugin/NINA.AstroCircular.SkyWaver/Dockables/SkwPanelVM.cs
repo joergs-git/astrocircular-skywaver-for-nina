@@ -13,6 +13,7 @@ using NINA.Image.Interfaces;
 using NINA.PlateSolving;
 using NINA.Profile.Interfaces;
 using NINA.Sequencer.SequenceItem.Platesolving;
+using NINA.WPF.Base.Interfaces;
 using NINA.WPF.Base.Interfaces.ViewModel;
 using NINA.WPF.Base.ViewModel;
 using System;
