@@ -83,7 +83,8 @@
                 <TextBlock Grid.Row="2" Grid.Column="2" Text="Rad%" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
                 <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding RadiusPercent, UpdateSourceTrigger=PropertyChanged}" Margin="2,1" FontSize="11" />
                 <TextBlock Grid.Row="2" Grid.Column="4" Text="Bin" VerticalAlignment="Center" FontSize="11" Margin="4,0,0,0" />
-                <ComboBox Grid.Row="2" Grid.Column="5" SelectedIndex="{Binding BinningIndex}" Margin="2,1" FontSize="11">
+                <ComboBox Grid.Row="2" Grid.Column="5" SelectedIndex="{Binding BinningIndex}" Margin="2,1" FontSize="11"
+                          ToolTip="SkyWave currently only supports 1x1. Binned images may not be recognized.">
                     <ComboBoxItem Content="1x1" />
                     <ComboBoxItem Content="2x2" />
                     <ComboBoxItem Content="3x3" />

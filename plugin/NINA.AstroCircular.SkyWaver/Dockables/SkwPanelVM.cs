@@ -215,7 +215,7 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
             set { offset = value; RaisePropertyChanged(); SaveSettings(); }
         }
 
-        private int binning = 2;
+        private int binning = 1;
         public int Binning {
             get => binning;
             set { binning = value; RaisePropertyChanged(); RaisePropertyChanged(nameof(BinningIndex)); SaveSettings(); }
