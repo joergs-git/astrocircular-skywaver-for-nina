@@ -4,7 +4,8 @@ A [N.I.N.A.](https://nighttime-imaging.eu/) plugin that automates telescope coll
 
 ## Contents
 
-- [Why this exists](#why-this-exists)
+- [Background — SkyWave & AI Wavefront Sensing](#background--skywave--ai-wavefront-sensing)
+- [Why this plugin exists](#why-this-plugin-exists)
 - [What this plugin does differently](#what-this-plugin-does-differently)
 - [How it works](#how-it-works)
 - [Two tools, one workflow](#two-tools-one-workflow)
@@ -15,11 +16,17 @@ A [N.I.N.A.](https://nighttime-imaging.eu/) plugin that automates telescope coll
 - [Requirements](#requirements)
 - [License](#license)
 
-## Why this exists
+## Background — SkyWave & AI Wavefront Sensing
+
+[SkyWave](https://www.innovationsforesight.com/aitelescopecollimation/) is a desktop application by [InnovationForesight](https://www.innovationsforesight.com/) that uses **AI-based wavefront sensing (AIWFS)** to analyze telescope optics. You feed it a defocused star image (FITS), and SkyWave extracts the telescope's full wavefront error — coma, astigmatism, tilt, spacing issues, field curvature, and more — all in seconds, on a standard laptop.
+
+What makes SkyWave unique is that it doesn't just tell you "your collimation is off." It quantifies **how much** and **in which direction**, showing Zernike coefficients, wavefront maps, and actionable correction vectors. For telescopes with adjustable optics (SCTs, RCs, Newtonians, refractors with tilt adjusters), this turns collimation from guesswork into a measured, repeatable process.
+
+SkyWave can work with a single on-axis star, but its real power emerges when it receives defocused star data from **multiple field positions** — that's where this plugin comes in.
+
+## Why this plugin exists
 
 Precise telescope collimation is critical for sharp, aberration-free images — but getting there has always been tedious. The traditional workflow means manually slewing to a star, defocusing, capturing a frame, then repeating at multiple field positions, often juggling between NINA sequences, PixInsight scripts, and manual mount control. Most people give up after a single on-axis star and never detect the field-dependent problems lurking at the edges of their sensor.
-
-[SkyWave](https://www.innovationsforesight.com/aitelescopecollimation/) by InnovationForesight changed the game: it uses AI-based wavefront sensing (AIWFS) to analyze a defocused star image and extract the telescope's full wavefront error — coma, astigmatism, tilt, spacing issues, field curvature, and more — all from a single FITS file, in seconds, on a standard laptop.
 
 ## What this plugin does differently
 
@@ -32,19 +39,20 @@ Instead of capturing just one defocused star at the center of the sensor, this p
 
 A single centered star cannot reveal these. Spreading the defocused donut across the entire sensor makes the difference between "collimated on-axis" and "truly collimated across the whole field."
 
-The plugin handles everything automatically — slew, center, filter change, optional autofocus, defocus, circular capture, integration, and refocus — in one click.
+The plugin handles everything automatically — slew, center, filter change, optional autofocus, defocus, circular capture, MAX-stacking, optional crop, and refocus — in one click.
 
 ## How it works
 
-1. **Select** an isolated star of appropriate magnitude (from 16 built-in presets or manual RA/Dec — "Find Best" auto-selects based on your optics to target ~60% ADU without overexposure)
+1. **Select** an isolated star of appropriate magnitude (from 22 built-in presets or manual RA/Dec — "Find Best" auto-selects based on your optics to target ~60% ADU without overexposure)
 2. **Switch to L filter** and **plate-solve & center** on the star (in focus)
 3. **Switch to target filter** (e.g. R, G, B) for capture
 4. **Optionally run autofocus** — a dialog asks before defocusing (works with NINA's built-in AF or Hocusfocus)
-5. **Defocus** by a configurable number of focuser steps
-6. **Capture** exposures at N positions around a circular ring pattern
-7. **Integrate** sub-frames natively (simple average, optional square crop, optional bin 2x)
-8. **Save** a 16-bit monochrome FITS to your configured output folder
-9. **Refocus** — always returns the focuser, even on failure
+5. **Defocus** by a configurable number of focuser steps (with steps/µm readout for your focuser)
+6. **Capture** exposures at N positions around a circular ring pattern (blind slews — no plate-solving while defocused)
+7. **MAX-stack** sub-frames — each pixel keeps its maximum value across all frames, so every defocused donut shines through without dilution
+8. **Optionally crop** the integrated image to the ring pattern bounding box + 300px safety margin
+9. **Save** a 16-bit monochrome FITS with proper headers (FOCALLEN, XPIXSZ, XBINNING, etc.) to your configured output folder
+10. **Refocus** — always returns the focuser and restores the original filter, even on failure or cancel
 
 <img width="1182" height="719" alt="Collimation Helper for SkyWave" src="https://github.com/joergs-git/Skywave-Collimation-helper-for-NINA/blob/main/astrocirular-skw-nina-helper.png" />
 
@@ -55,12 +63,35 @@ The plugin handles everything automatically — slew, center, filter change, opt
 A native N.I.N.A. plugin that does everything inside NINA — no external tools required:
 
 - **Dockable tool panel** in NINA's imaging tab — click "Run Collimation" and it does everything
-- **Star picker** with 16 presets and "Find Best" auto-selection based on time and location
+- **Star picker** with 22 presets (mag 2–5, all seasons) and **"Find Best"** auto-selection based on time, location, and optical setup
+- **Magnitude advisor** — computes ideal star brightness from your focal length, aperture, exposure, and gain to target ~60% ADU fill
+- **Steps/µm readout** — enter your focuser's steps-per-micron and see real defocus distance in µm
 - **Live sensor map** showing ring positions with progress (grey=pending, red=active, green=done)
-- **Camera preview** of each captured frame with auto-stretch
-- **Native FITS integration** — simple pixel average, no alignment, no rejection, no normalization
-- **Optional autofocus** before defocusing — works with any AF provider
+- **Camera preview** of each captured frame with auto-stretch (median + MAD robust statistics)
+- **MAX stacking** — each pixel keeps its maximum value, preserving every donut across the field
+- **Optional crop** — trims the integrated image to the ring pattern + 300px margin (off by default — SkyWave may need full sensor dimensions)
+- **Native FITS output** — always 16-bit unsigned with correct headers, regardless of NINA's default format setting
+- **Optional autofocus** before defocusing — works with any AF provider (NINA built-in, Hocusfocus, etc.)
+- **Full cancellation support** — focus and filter always restored on cancel or error
 - **All settings persist** between NINA sessions
+
+#### Settings overview
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Exposure (s) | 8.0 | Capture duration per position |
+| Gain | 100 | Camera gain |
+| Offset | 0 | Camera offset/bias |
+| Defocus steps | 2442 | Focuser steps to defocus |
+| Steps/µm | 3.0 | Focuser calibration (e.g. ZWO EAF = 3.0) |
+| Ring positions | 8 | Number of positions on the circle |
+| Radius % | 80 | Ring radius as percentage of FOV |
+| Include center | On | Add center position as first capture |
+| Settle time (s) | 3 | Pause after slew before exposure |
+| Filter | L | Capture filter (L, R, G, B, Ha, etc.) |
+| Crop | Off | Crop to ring pattern + 300px margin |
+| Del subs | Off | Auto-delete individual sub-frames after stacking |
+| AF first | Off | Run autofocus before defocusing |
 
 #### Installation
 
@@ -71,7 +102,7 @@ A native N.I.N.A. plugin that does everything inside NINA — no external tools 
 #### Usage
 
 1. Open the **Collimation Helper for SkyWave** panel (imaging tab, tool windows)
-2. Select a star from the presets or enter RA/Dec manually
+2. Select a star from the presets or click **Find Best** for automatic selection
 3. Set defocus steps, exposure time, filter, gain, positions, radius
 4. Set the output folder via the `...` browse button
 5. Click **Run Collimation**
@@ -98,15 +129,18 @@ A standalone browser-based tool that generates N.I.N.A. sequence files and PixIn
 | ξ Cep | 22:03:47.5 | +64:37:41 | 4.29 | Fall | Away from Milky Way |
 | α Cam | 04:54:03.0 | +66:20:34 | 4.29 | Winter | Recommended! Sparsest field in the sky |
 
-See the full list of 16 presets in the [web tool](https://joergs-git.github.io/Skywave-Collimation-helper-for-NINA/).
+See the full list of 22 presets (mag 2–5) in the [web tool](https://joergs-git.github.io/Skywave-Collimation-helper-for-NINA/).
 
 ## Tips
 
 - **Camera rotation:** Set your camera to 0° or 180° rotation to avoid confusion with mirrored orientation in the integrated image. Since we capture in a circle, rotation doesn't affect collimation quality — it just makes visual interpretation easier.
 - **Center position first:** The plugin always captures the center star position first (if enabled), then the ring positions. This matches SkyWave's expectation for field-dependent analysis.
-- **Integration:** The integration is a simple pixel-by-pixel average — no alignment, no rejection, no normalization, no weighting. This is by design: each frame shows the defocused star at a different field position, and SkyWave needs the raw combined pattern.
+- **MAX stacking:** The integration uses pixel-by-pixel MAX stacking — no alignment, no rejection, no normalization. Each frame shows the defocused star at a different field position. MAX mode ensures every donut ring is preserved at full brightness without dilution from empty areas.
 - **Output format:** Always 16-bit unsigned FITS with proper headers (FOCALLEN, XPIXSZ, XBINNING, etc.). Never XISF — regardless of NINA's default format setting.
-- **Sub-frames:** When "Auto-delete subs" is off, individual frames are kept in a `subframes_*` subfolder inside your output directory.
+- **Sub-frames:** When "Del subs" is off, individual frames are kept in a `subframes_*` subfolder inside your output directory.
+- **Bin 2 pixel size:** If you capture at bin 2, remember that your effective pixel size doubles. Enter your native (bin 1) pixel size in NINA's camera settings — the plugin handles the FITS header math.
+- **Focuser calibration:** Use the steps/µm field to verify your defocus amount in real physical units. Check your focuser's specs — e.g. ZWO EAF is ~3 steps/µm, Moonlite is typically ~1 step/µm.
+- **Blind slews:** Ring positions are reached via blind SlewToRaDec — no plate-solving while defocused. This is by design: the telescope stays defocused throughout the ring capture, and plate-solving defocused stars is unreliable.
 
 ## Requirements
 
@@ -115,7 +149,7 @@ See the full list of 16 presets in the [web tool](https://joergs-git.github.io/S
 - Electronic focuser
 - Camera with FITS output
 - Filter wheel (optional — for L filter plate-solving and target filter capture)
-- [SkyWave Collimator](https://www.innovationsforesight.com/aitelescopecollimation/) for wavefront analysis
+- [SkyWave](https://www.innovationsforesight.com/aitelescopecollimation/) by InnovationForesight for wavefront analysis
 
 ## License
 

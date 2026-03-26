@@ -846,9 +846,10 @@ namespace NINA.AstroCircular.SkyWaver.Dockables {
                 var accumulated = maxStack;
                 Logger.Info($"SKW: MAX-stacked {frameCount} frames ({width}x{height})");
 
-                // Optional crop to ring pattern bounding box + 150px margin
+                // Optional crop to ring pattern bounding box + 300px margin
+                // (defocused stars on long sensor sides need extra safety distance)
                 if (CropAfterStack) {
-                    int cropMarginPx = 100;
+                    int cropMarginPx = 300;
                     int halfCropW = (int)(RadiusPercent / 100.0 * width / 2) + cropMarginPx;
                     int halfCropH = (int)(RadiusPercent / 100.0 * height / 2) + cropMarginPx;
                     int cropW = Math.Min(halfCropW * 2, width);
