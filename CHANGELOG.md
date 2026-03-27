@@ -4,6 +4,15 @@ All notable changes to Collimation Helper for SkyWave will be documented in this
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] - 2026-03-27
+
+### Fixed
+- Plugin not loading after install from NINA plugin manager — ZIP archive now contains the DLL at the root level instead of inside a subfolder
+
+### Changed
+- CI now uses NINA's official `CreateManifest.ps1` script for manifest and archive generation
+- All plugin metadata (descriptions, tags, URLs) moved into AssemblyInfo.cs assembly attributes as single source of truth
+
 ## [1.0.0] - 2026-03-27
 
 First stable release for the official N.I.N.A. plugin repository.

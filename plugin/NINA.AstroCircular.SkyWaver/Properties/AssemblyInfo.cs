@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 // General Information
 [assembly: AssemblyTitle("Collimation Helper for SkyWave")]
-[assembly: AssemblyDescription("Automated telescope collimation helper for InnovationForesight's SkyWave — circular defocused star pattern capture across the full sensor plane, native frame integration, and wavefront-ready FITS output.")]
+[assembly: AssemblyDescription("Automated SkyWave collimation helper — circular defocused star capture & native FITS integration")]
 [assembly: AssemblyCompany("joergsflow")]
 [assembly: AssemblyProduct("Collimation Helper for SkyWave")]
 [assembly: AssemblyCopyright("Copyright © joergsflow 2026")]
@@ -15,8 +15,8 @@ using System.Runtime.InteropServices;
 [assembly: Guid("b7e3f1a2-9c4d-4e8b-a6f5-1d2c3b4a5e6f")]
 
 // Version: MAJOR.MINOR.PATCH.CHANNEL (9=release, 2=beta, 1=nightly)
-[assembly: AssemblyVersion("1.0.0.9")]
-[assembly: AssemblyFileVersion("1.0.0.9")]
+[assembly: AssemblyVersion("1.0.1.9")]
+[assembly: AssemblyFileVersion("1.0.1.9")]
 
 // NINA plugin metadata
 [assembly: AssemblyMetadata("MinimumApplicationVersion", "3.0.0.9001")]
@@ -24,8 +24,11 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("LicenseURL", "https://www.gnu.org/licenses/gpl-3.0.html")]
 [assembly: AssemblyMetadata("Repository", "https://github.com/joergs-git/Skywave-Collimation-helper-for-NINA")]
 [assembly: AssemblyMetadata("Homepage", "https://github.com/joergs-git/Skywave-Collimation-helper-for-NINA")]
-[assembly: AssemblyMetadata("Tags", "Collimation,SkyWave,SKW,Wavefront,Defocus,Optics,Tilt")]
-[assembly: AssemblyMetadata("ShortDescription", "Automated SkyWave collimation helper — circular defocused star capture & native FITS integration")]
+[assembly: AssemblyMetadata("Tags", "Collimation,SkyWave,Wavefront,Defocus,Optics,Tilt,Coma,Astigmatism")]
+[assembly: AssemblyMetadata("ChangelogURL", "https://github.com/joergs-git/Skywave-Collimation-helper-for-NINA/blob/main/CHANGELOG.md")]
+[assembly: AssemblyMetadata("FeaturedImageURL", "https://raw.githubusercontent.com/joergs-git/Skywave-Collimation-helper-for-NINA/main/pluginsettings.png")]
+[assembly: AssemblyMetadata("ScreenshotURL", "https://raw.githubusercontent.com/joergs-git/Skywave-Collimation-helper-for-NINA/main/pluginrun.png")]
+[assembly: AssemblyMetadata("AltScreenshotURL", "https://raw.githubusercontent.com/joergs-git/Skywave-Collimation-helper-for-NINA/main/pluginsettings.png")]
 [assembly: AssemblyMetadata("LongDescription",
 @"Collimation Helper for SkyWave automates the complete telescope collimation data-capture workflow inside N.I.N.A., producing wavefront-ready FITS images for InnovationForesight's SkyWave AI analysis:
 

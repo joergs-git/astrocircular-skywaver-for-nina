@@ -36,30 +36,40 @@ jobs:
       - name: Build Release
         run: dotnet build NINA.AstroCircular.SkyWaver.sln --configuration Release --no-restore -p:Platform=x64
 
-      - name: Package installer zip
+      - name: Fetch CreateManifest script
         shell: pwsh
         run: |
-          $stagingDir = "staging"
-          New-Item -ItemType Directory -Force -Path $stagingDir
-          Copy-Item "NINA.AstroCircular.SkyWaver/bin/x64/Release/NINA.CollimationHelper.SkyWave.dll" $stagingDir
-          Copy-Item "install.bat" $stagingDir
-          Copy-Item "uninstall.bat" $stagingDir
-          @"
-          Collimation Helper for SkyWave — v1.0.0
-          ========================================
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/isbeorn/nina.plugin.manifests/main/tools/CreateManifest.ps1" -OutFile "CreateManifest.ps1"
 
-          INSTALL:  Double-click install.bat (close NINA first!)
-          MANUAL:   Copy NINA.CollimationHelper.SkyWave.dll to
-                    %localappdata%\NINA\3\Plugins\CollimationHelper.SkyWave\
+      - name: Generate manifest and archive
+        shell: pwsh
+        run: |
+          $dllPath = "NINA.AstroCircular.SkyWaver/bin/x64/Release/NINA.CollimationHelper.SkyWave.dll"
 
-          UNINSTALL: Double-click uninstall.bat
+          # Read version from built DLL
+          $fileVersion = (Get-Item $dllPath).VersionInfo.FileVersion
+          $versionParts = $fileVersion.Split(".")
+          $semver = "$($versionParts[0]).$($versionParts[1]).$($versionParts[2])"
+          Write-Output "Plugin version: $semver (file version: $fileVersion)"
 
-          After installing, restart N.I.N.A. and find the
-          Collimation Helper for SkyWave panel in the tool windows.
+          # Installer URL for the stable GitHub release
+          $installerUrl = "https://github.com/${{ github.repository }}/releases/download/v${semver}/NINA.CollimationHelper.SkyWave.${fileVersion}.zip"
 
-          https://github.com/joergs-git/Skywave-Collimation-helper-for-NINA
-          "@ | Out-File -Encoding utf8 "staging/README.txt"
-          Compress-Archive -Path "staging/*" -DestinationPath "CollimationHelper.SkyWave-v1.0.0.zip" -Force
+          # Run CreateManifest.ps1 — generates ZIP (just the DLL) and manifest.json
+          ./CreateManifest.ps1 -file $dllPath -createArchive -appendVersionToArchive -installerUrl $installerUrl
+
+          # Store version for later steps
+          "PLUGIN_VERSION=$semver" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "PLUGIN_FILE_VERSION=$fileVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Upload build artifacts
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-build
+          path: |
+            plugin/NINA.CollimationHelper.SkyWave.*.zip
+            plugin/manifest.json
 
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
@@ -67,30 +77,31 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "v1.0.0-build.${{ github.run_number }}"
-          $title = "Collimation Helper for SkyWave v1.0.0 (build ${{ github.run_number }})"
+          $semver = $env:PLUGIN_VERSION
+          $fileVersion = $env:PLUGIN_FILE_VERSION
+          $zipFile = "NINA.CollimationHelper.SkyWave.${fileVersion}.zip"
+          $tag = "v${semver}-build.${{ github.run_number }}"
+          $title = "Collimation Helper for SkyWave v${semver} (build ${{ github.run_number }})"
           $notes = @"
-          ## Collimation Helper for SkyWave — v1.0.0
+          ## Collimation Helper for SkyWave — v${semver}
 
           Native NINA plugin for automated SkyWave telescope collimation.
 
-          ### Install
-          1. Download ``CollimationHelper.SkyWave-v1.0.0.zip`` below
-          2. Unzip and double-click ``install.bat``
+          ### Install via NINA Plugin Manager (recommended)
+          Options > Plugins > Available > search for "SkyWave"
+
+          ### Manual Install
+          1. Download ``${zipFile}`` below
+          2. Extract to ``%localappdata%\NINA\3\Plugins\``
           3. Restart N.I.N.A.
 
-          ### Usage
-          - Open NINA > find **Collimation Helper for SkyWave** panel in the tool windows
-          - Select a star, configure parameters, click **Run Collimation**
-          - Plugin controls mount, focuser, and camera directly
-          - Integrated FITS saved to your SkyWave watch folder
-
-          > Report issues at https://github.com/joergs-git/Skywave-Collimation-helper-for-NINA/issues
+          > Report issues at https://github.com/${{ github.repository }}/issues
           "@
-          # Delete previous pre-release with same base version if exists
-          gh release list --repo $env:GITHUB_REPOSITORY --limit 10 --json tagName --jq '.[].tagName' | ForEach-Object {
-            if ($_ -like "v1.0.0-build.*") {
+
+          # Delete previous pre-release builds for this version
+          gh release list --repo $env:GITHUB_REPOSITORY --limit 20 --json tagName --jq '.[].tagName' | ForEach-Object {
+            if ($_ -like "v${semver}-build.*") {
               gh release delete $_ --repo $env:GITHUB_REPOSITORY --yes --cleanup-tag 2>$null
             }
           }
-          gh release create $tag "CollimationHelper.SkyWave-v1.0.0.zip" --repo $env:GITHUB_REPOSITORY --title $title --notes $notes --prerelease
+          gh release create $tag $zipFile "manifest.json" --repo $env:GITHUB_REPOSITORY --title $title --notes $notes --prerelease
