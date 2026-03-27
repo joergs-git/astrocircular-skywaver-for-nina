@@ -2,13 +2,13 @@
   "Name": "Collimation Helper for SkyWave",
   "Identifier": "b7e3f1a2-9c4d-4e8b-a6f5-1d2c3b4a5e6f",
   "Version": {
-    "Major": "0",
-    "Minor": "2",
+    "Major": "1",
+    "Minor": "0",
     "Patch": "0",
-    "Build": "1"
+    "Build": "9"
   },
   "Author": "joergsflow",
-  "Homepage": "https://joergs-git.github.io/Skywave-Collimation-helper-for-NINA/",
+  "Homepage": "https://github.com/joergs-git/Skywave-Collimation-helper-for-NINA",
   "Repository": "https://github.com/joergs-git/Skywave-Collimation-helper-for-NINA",
   "License": "GPL-3.0",
   "LicenseURL": "https://www.gnu.org/licenses/gpl-3.0.html",
@@ -31,13 +31,13 @@
   },
   "Descriptions": {
     "ShortDescription": "Automated SkyWave collimation helper — circular defocused star capture & native FITS integration",
-    "LongDescription": "Automates the complete telescope collimation data-capture workflow for InnovationForesight's SkyWave AI wavefront analysis.\n\nCaptures a defocused star at multiple positions across the full sensor plane in a circular ring pattern, then integrates them into a single SkyWave-ready FITS.\n\nDetects field-dependent aberrations (tilt, spacing errors, off-axis coma, astigmatism, field curvature) that a single centered star cannot reveal.\n\nOne-click operation: slew, center, filter change, optional autofocus, defocus, circular capture, integration, and refocus — all automated.\n\nIf you find this useful, consider buying me a coffee: https://buymeacoffee.com/joergsflow",
-    "FeaturedImageURL": "",
-    "ScreenshotURL": "",
-    "AltScreenshotURL": ""
+    "LongDescription": "Automates the complete telescope collimation data-capture workflow for InnovationForesight's SkyWave AI wavefront analysis.\n\nCaptures a defocused star at multiple positions across the full sensor plane in a circular ring pattern, then MAX-stacks them into a single SkyWave-ready FITS.\n\nDetects field-dependent aberrations (tilt, spacing errors, off-axis coma, astigmatism, field curvature) that a single centered star cannot reveal.\n\nOne-click operation: slew, plate-solve & center, filter change, optional autofocus, defocus, circular capture, MAX-stack integration, and refocus — all automated.\n\n22 built-in star presets with intelligent auto-selection based on time, location, and optical setup.\n\nIf you find this useful, consider buying me a coffee: https://buymeacoffee.com/joergsflow",
+    "FeaturedImageURL": "https://raw.githubusercontent.com/joergs-git/Skywave-Collimation-helper-for-NINA/main/pluginsettings.png",
+    "ScreenshotURL": "https://raw.githubusercontent.com/joergs-git/Skywave-Collimation-helper-for-NINA/main/pluginrun.png",
+    "AltScreenshotURL": "https://raw.githubusercontent.com/joergs-git/Skywave-Collimation-helper-for-NINA/main/pluginsettings.png"
   },
   "Installer": {
-    "URL": "https://github.com/joergs-git/Skywave-Collimation-helper-for-NINA/releases/download/v0.2.0/CollimationHelper.SkyWave-v0.2.0.zip",
+    "URL": "REPLACE_WITH_STABLE_RELEASE_ZIP_URL",
     "Type": "ARCHIVE",
     "Checksum": "REPLACE_WITH_SHA256_OF_RELEASE_ZIP",
     "ChecksumType": "SHA256"

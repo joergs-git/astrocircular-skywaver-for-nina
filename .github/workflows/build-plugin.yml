@@ -45,7 +45,7 @@ jobs:
           Copy-Item "install.bat" "staging/"
           Copy-Item "uninstall.bat" "staging/"
           @"
-          Collimation Helper for SkyWave — v0.2.0
+          Collimation Helper for SkyWave — v1.0.0
           ========================================
 
           INSTALL:  Double-click install.bat (close NINA first!)
@@ -56,11 +56,10 @@ jobs:
 
           After installing, restart N.I.N.A. and find the
           Collimation Helper for SkyWave panel in the tool windows.
-          Settings in Options > Plugins > Collimation Helper for SkyWave.
 
           https://github.com/joergs-git/Skywave-Collimation-helper-for-NINA
           "@ | Out-File -Encoding utf8 "staging/README.txt"
-          Compress-Archive -Path "staging/*" -DestinationPath "CollimationHelper.SkyWave-v0.2.0.zip" -Force
+          Compress-Archive -Path "staging/*" -DestinationPath "CollimationHelper.SkyWave-v1.0.0.zip" -Force
 
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
@@ -68,15 +67,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "v0.2.0-build.${{ github.run_number }}"
-          $title = "Collimation Helper for SkyWave v0.2.0 (build ${{ github.run_number }})"
+          $tag = "v1.0.0-build.${{ github.run_number }}"
+          $title = "Collimation Helper for SkyWave v1.0.0 (build ${{ github.run_number }})"
           $notes = @"
-          ## Collimation Helper for SkyWave — v0.2.0
+          ## Collimation Helper for SkyWave — v1.0.0
 
           Native NINA plugin for automated SkyWave telescope collimation.
 
           ### Install
-          1. Download ``CollimationHelper.SkyWave-v0.2.0.zip`` below
+          1. Download ``CollimationHelper.SkyWave-v1.0.0.zip`` below
           2. Unzip and double-click ``install.bat``
           3. Restart N.I.N.A.
 
@@ -86,12 +85,12 @@ jobs:
           - Plugin controls mount, focuser, and camera directly
           - Integrated FITS saved to your SkyWave watch folder
 
-          > Early development build — report issues at https://github.com/joergs-git/Skywave-Collimation-helper-for-NINA/issues
+          > Report issues at https://github.com/joergs-git/Skywave-Collimation-helper-for-NINA/issues
           "@
           # Delete previous pre-release with same base version if exists
           gh release list --repo $env:GITHUB_REPOSITORY --limit 10 --json tagName --jq '.[].tagName' | ForEach-Object {
-            if ($_ -like "v0.2.0-build.*") {
+            if ($_ -like "v1.0.0-build.*") {
               gh release delete $_ --repo $env:GITHUB_REPOSITORY --yes --cleanup-tag 2>$null
             }
           }
-          gh release create $tag "CollimationHelper.SkyWave-v0.2.0.zip" --repo $env:GITHUB_REPOSITORY --title $title --notes $notes --prerelease
+          gh release create $tag "CollimationHelper.SkyWave-v1.0.0.zip" --repo $env:GITHUB_REPOSITORY --title $title --notes $notes --prerelease
